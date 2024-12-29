@@ -1,0 +1,193 @@
+\documentclass[12pt]{article}
+
+% Paquetes necesarios
+\usepackage{amsthm}  % Para los entornos theorem, definition, etc.
+\usepackage{amsmath}  % Para matemáticas avanzadas
+\usepackage{amssymb}  % Para símbolos matemáticos
+\usepackage{geometry}  % Para personalizar márgenes
+\usepackage{graphicx}  % Para incluir imágenes
+\usepackage{hyperref}  % Para crear hipervínculos
+\usepackage{fancyhdr}  % Para encabezados personalizados
+\usepackage{enumitem} % Paquete para personalizar listas
+
+% Configuración de márgenes
+\geometry{a4paper, margin=1in}
+
+% Aumentamos la altura del encabezado para evitar el error
+\setlength{\headheight}{15pt}
+
+% Definición de los entornos theorem y definition
+\newtheorem{theorem}{Teorema}[section]
+\newtheorem{definition}[theorem]{Definición}
+\newtheorem{example}[theorem]{Ejemplo}
+
+% Encabezado
+\pagestyle{fancy}
+\fancyhead[L]{Teoría de Números}
+\fancyhead[R]{\thepage}
+
+\title{Propiedades matemáticas interesantes}
+\author{Jaime Sebastian Chavarria Fuertes}
+\date{\today}
+
+\newlist{propiedades}{itemize}{1} % Basado en itemize
+\setlist[propiedades]{label=--, left=0pt, itemsep=0.5em} % Configuración personalizada
+
+\begin{document}
+
+\maketitle
+
+\section{Fibonacci}
+\subsection{Calculo eficiente del n-simo fibonacci en \(O(\log n)\)}
+Los números de Fibonacci están definidos por la relación:
+\[
+F(n) = F(n-1) + F(n-2), \quad \text{con } F(0) = 0, F(1) = 1.
+\]
+Esta relación puede expresarse matricialmente como:
+\[
+\begin{bmatrix}
+F(n+1) \\
+F(n)
+\end{bmatrix}
+=
+\begin{bmatrix}
+1 & 1 \\
+1 & 0
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+F(n) \\
+F(n-1)
+\end{bmatrix}.
+\]
+
+La matriz de transición es:
+\[
+T =
+\begin{bmatrix}
+1 & 1 \\
+1 & 0
+\end{bmatrix}.
+\]
+\textbf{Generalizacion mediante potencias:}
+
+Iterando este proceso, se obtiene:
+\[
+\begin{bmatrix}
+F(n) \\
+F(n-1)
+\end{bmatrix}
+=
+T^{n-1}
+\cdot
+\begin{bmatrix}
+F(1) \\
+F(0)
+\end{bmatrix}.
+\]
+
+Por lo tanto, \( F(n) \) es el elemento en la esquina superior izquierda de \( T^{n-1} \):
+\[
+F(n) = T^{n-1}[0][0].
+\]
+La implementacion en C++ se encuentra en el notebook en la pagina XX
+\section{Problemas Ad Hoc}
+\subsection{Aplicar una permutación $k$ veces}
+
+Este problema trata sobre aplicar una \textbf{permutación} varias veces a una secuencia.
+
+\subsubsection{¿Qué es una permutación?}
+
+Una permutación en este contexto es una reorganización de los índices de una secuencia. Por ejemplo, si tienes una secuencia:
+\[
+\text{sequence} = [10, 20, 30]
+\]
+\[
+\text{permutation} = [2, 0, 1]
+\]
+Esto significa que:
+\begin{itemize}[noitemsep]
+    \item El elemento en la posición $0$ va a la posición $2$ (el $10$ se mueve al índice $2$).
+    \item El elemento en la posición $1$ va a la posición $0$ (el $20$ se mueve al índice $0$).
+    \item El elemento en la posición $2$ va a la posición $1$ (el $30$ se mueve al índice $1$).
+\end{itemize}
+El resultado de aplicar esta permutación una vez sería:
+\[
+[20, 30, 10]
+\]
+
+\subsubsection{Objetivo del problema}
+
+Queremos aplicar esta permutación no solo una vez, sino \textbf{$k$ veces}, a una secuencia inicial.
+
+\subsubsection{Solución inicial: Aplicación directa}
+
+Podríamos simplemente aplicar la permutación al vector $k$ veces con un bucle:
+\begin{verbatim}
+for (int i = 0; i < k; i++) {
+    sequence = applyPermutation(sequence, permutation);
+}
+\end{verbatim}
+Sin embargo, esto tendría una complejidad de $O(n \cdot k)$, donde $n$ es el tamaño de la secuencia. Esto no es eficiente si $k$ es grande.
+
+\subsubsection{Optimización con exponenciación binaria}
+
+\textbf{Concepto clave: Exponenciación binaria}
+
+La idea es que podemos aplicar la permutación de forma más eficiente aprovechando las potencias de 2:
+
+\begin{enumerate}[noitemsep]
+    \item Si queremos aplicar la permutación $k = 13$ veces, podemos descomponer $k$ en potencias de 2:
+    \[
+    13 = 1 + 4 + 8 \quad (\text{o en binario } 1101)
+    \]
+    Esto significa:
+    \begin{itemize}[noitemsep]
+        \item Aplicamos la permutación una vez ($1 = 2^0$).
+        \item Luego la aplicamos 4 veces ($4 = 2^2$).
+        \item Luego 8 veces ($8 = 2^3$).
+    \end{itemize}
+
+    \item En lugar de calcular las permutaciones de forma individual, podemos "acelerarlo":
+    \begin{itemize}[noitemsep]
+        \item Calcula la permutación $P^2$ aplicando $P$ sobre sí misma ($P^2 = P \circ P$).
+        \item Calcula $P^4$ aplicando $P^2$ sobre sí misma, y así sucesivamente.
+    \end{itemize}
+
+    \item Finalmente, suma las permutaciones correspondientes según la representación binaria de $k$.
+\end{enumerate}
+
+\subsubsection{Implementación}
+
+En el código, se usa \texttt{applyPermutation} para aplicar una permutación a la secuencia o a la permutación misma.
+
+\begin{itemize}[noitemsep]
+    \item \textbf{\texttt{applyPermutation}}: Toma una secuencia y aplica una permutación.
+    \item \textbf{\texttt{permute}}: Calcula la secuencia final después de aplicar la permutación $k$ veces utilizando exponenciación binaria.
+\end{itemize}
+
+\subsubsection{Segunda solución: Uso de ciclos}
+
+Una permutación puede representarse como un \textbf{grafo de ciclos}, donde cada índice apunta a su nueva posición. Por ejemplo:
+\[
+\text{permutation} = [2, 0, 1]
+\]
+Esto corresponde al grafo:
+\[
+0 \to 2 \to 1 \to 0 \quad (\text{un ciclo})
+\]
+
+\subsubsection{Idea clave}
+
+\begin{enumerate}[noitemsep]
+    \item Encuentra los \textbf{ciclos} en el grafo de la permutación.
+    \item Para cada ciclo, aplica solo $k \mod \text{longitud del ciclo}$. Esto es suficiente porque después de recorrer el ciclo completamente, los elementos vuelven a sus posiciones originales.
+\end{enumerate}
+
+\subsubsection{Ventaja}
+
+Este enfoque tiene una complejidad de \textbf{$O(n)$}, ya que procesamos cada elemento una sola vez mientras encontramos los ciclos.
+\subsubsection{Implementación}
+La implementacion esta en la pagina XX del notebook
+
+\end{document}
