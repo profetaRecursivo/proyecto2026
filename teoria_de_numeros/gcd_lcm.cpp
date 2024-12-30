@@ -5,7 +5,6 @@ int gecd(int a, int b) {
     }
     return a;
 }
-
 int lcm (int a, int b) {
     return a / gecd(a, b) * b;
 }

@@ -64,6 +64,75 @@ Es decir que \( n \) divide a: \( ( a - b ) \)
     \item Dispuesto a completar y/o agregar cosas
 \end{propiedades}
 
+\section{Fibonacci}
+La secuencia tiene un monton de propiedades interesantes. Algunas de ellas son:
+
+    \begin{theorem}[Identidad de Cassini]
+        \[F_{n-1}F_{n+1} - F_n^2 = (-1)^n\]
+    \end{theorem}
+    \begin{theorem}[Regla de adicion]
+        \[F_{n+k} = F_kF_{n+1} + F_{k-1}F_n\]
+    \end{theorem}
+    \begin{theorem}[Aplicando la regla previa a \(k = n\) conseguimos:]
+        \[F_{2n} = F_n(F_{n+1} + F_{n-1})\]
+    \end{theorem}
+    \begin{theorem}
+        Con la definicion anterior se puede probar que para cualquier entero positivo k, \(F_{nk}\) es multiplo de \(F_n\)
+    \end{theorem}
+    \begin{theorem}
+        El inverso del anterior tambien es verdad, si \(F_m\) es multiplo de \(F_n\) entonces \(m\) es multiplo de \(n\)
+    \end{theorem}
+    \begin{theorem}[Identidad del GCD]
+        \[GCD(F_m, F_n) = F_{GCD(m, n)}\]
+    \end{theorem}
+    \begin{itemize}
+        \item Solo para saber, los numeros de Fibonacci son el peor caso en la entrada del gcd extendido
+    \end{itemize}
+    \subsection{Formula de Binet}
+        \[F_n = \frac{(\frac{1 + \sqrt{5}}{2})^n - (\frac{1 - \sqrt{5}}{2})^n}{\sqrt{5}}\]
+    Podemos deducir la formula siguiente, redondeando hacia el entero mas proximo:
+        \[F_n = \frac{(\frac{1 + \sqrt{5}}{2})^n}{\sqrt{5}}\]
+    Como estas dos formulas requieren alta precicion casi no tienen uso practico.
+    \subsection{Calculando el F en \(O(\log n)\)}
+        \[
+    \begin{pmatrix} 
+        1 & 1 \\ 
+        1 & 0 
+    \end{pmatrix}^n =
+    \begin{pmatrix} 
+        F_{n+1} & F_{n} \\ 
+        F_{n} & F_{n-1} 
+    \end{pmatrix}
+    \]
+    El codigo que lo implementa esta en la pagina xxx
+    
+    Expandiendo la matriz para \(n = 2k\)
+    \[
+        \begin{pmatrix}
+            F_{2k+1} & F_{2k}\\
+            F_{2k} & F_{2k-1}
+            \end{pmatrix}
+            =
+            \begin{pmatrix}
+            1 & 1\\
+            1 & 0
+            \end{pmatrix}^{2k}
+            =
+            \begin{pmatrix}
+            F_{k+1} & F_{k}\\
+            F_{k} & F_{k-1}
+            \end{pmatrix}
+            ^2
+    \]
+    Encontramos estas ecuaciones simples:
+    
+        \begin{align}
+            F_{2k+1} &= F_{k+1}^2 + F_{k}^2 \\
+            F_{2k} &= F_k(F_{k+1}+F_{k-1}) = F_k (2F_{k+1} - F_{k})
+        \end{align}
+    Gracias a estas ecuaciones tenemos el codigo en la pagina xx para calcular el fibonacci en tiempo logaritmico
+    \subsection{Suma de \(F_0 + F_1 + ... + F_n\)}
+        La suma resulta en \(F_{n+2}\)
 \section{Numeros Primos}
 \begin{definition}[Numero Primo]
     Un numero es primos si y solo si tiene unicamente dos divisores
