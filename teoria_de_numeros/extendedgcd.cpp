@@ -1,4 +1,4 @@
-int gcd(int a, int b, int& x, int& y) {
+int extgcd(int a, int b, int& x, int& y) {
     x = 1, y = 0;
     int x1 = 0, y1 = 1, a1 = a, b1 = b;
     while (b1) {
