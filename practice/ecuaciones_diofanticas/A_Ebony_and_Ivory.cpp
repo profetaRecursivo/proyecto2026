@@ -37,6 +37,7 @@ int extgcd(int a, int b, int& x, int& y) {
 }
 
 void solve(){
+    vector<int> arr(n);
     int a, b, c;cin>>a>>b>>c;
     int gcd, x0, y0;
     gcd = extgcd(a, b, x0, y0);
