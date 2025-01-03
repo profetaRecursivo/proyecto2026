@@ -1,0 +1,20 @@
+# Basado en Google con ajustes para minimizar el tamaño del código
+BasedOnStyle: Google
+IndentWidth: 4
+TabWidth: 4
+UseTab: Always
+
+# Configuración de llaves y espaciado
+BreakBeforeBraces: Attach
+AllowShortBlocksOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: true
+AllowShortLoopsOnASingleLine: true
+ColumnLimit: 80
+
+# Compactación y estilo de listas
+CompactNamespaces: true
+# Espacios y alineación
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpaceAfterCStyleCast: false
+PointerAlignment: Left

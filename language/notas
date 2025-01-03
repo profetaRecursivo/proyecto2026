@@ -1,0 +1,3 @@
+--Hay gcd desde c++ 17
+--es mas efciente en tiempo bool arr[n], pero en memoria vector<bool> casi siempre gana el vector<bool>
+--liberar memoria del vector: std::vector<int>().swap(v); siendo v el vector que queremos eliminar completamente

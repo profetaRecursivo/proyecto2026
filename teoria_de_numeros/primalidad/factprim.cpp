@@ -1,4 +1,4 @@
-//O(log x) si ya tenemos el vector spf precomputado
+//O(log x) si ya tenemos el vector spf
 vector<int> prime_factors(int x) {
     vector<int> factors;
     while (x > 1) {
