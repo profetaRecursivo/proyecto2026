@@ -31,7 +31,37 @@ void solve(int n) {
                 primos.push_back(start + i);
         }
     }
-    for (int i = 0; i < (int)primos.size(); i += 100) {
+    for (int i = 0; i < (int)primos.size(); i += 500) {
         printf("%d\n", primos[i]);
     }
+}
+
+//exactamente 10^8:
+vector<int> primos;
+
+void solve(int n) {
+	const int S = 100000;
+	vector<int> primes;
+	int nsqrt = sqrt(n);
+	vector<char> esprimo(nsqrt + 1, true);
+	for (int i = 2; i <= nsqrt; i++) {
+		if (esprimo[i]) {
+			primes.push_back(i);
+			for (int j = i * i; j <= nsqrt; j += i) { esprimo[j] = false; }
+		}
+	}
+	vector<char> block(S);
+	for (int k = 0; k * S <= n; k++) {
+		fill(block.begin(), block.end(), true);
+		int start = k * S;
+		for (int p : primes) {
+			int posini =
+				max(p * p, (start + p - 1) / p * p);
+			for (int j = posini - start; j < S; j += p) { block[j] = false; }
+		}
+		if (k == 0) block[0] = block[1] = false;
+		for (int i = 0; i < S && start + i <= n; i++) {
+			if (block[i]) primos.push_back(start + i);
+		}
+	}
 }
