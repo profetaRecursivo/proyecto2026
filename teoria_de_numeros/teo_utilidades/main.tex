@@ -138,35 +138,53 @@ La secuencia tiene un monton de propiedades interesantes. Algunas de ellas son:
         \[5x^2 +4\]
         \[5x^2 - 4\]
     
-\section{Numeros Primos}
-\begin{definition}[Numero Primo]
-    Un numero es primos si y solo si tiene unicamente dos divisores
-\end{definition}
-
-
-
-
 \section{Funciones Aritméticas}
 
 Las funciones aritméticas son aquellas que se definen en los números enteros y tienen aplicaciones importantes en teoría de números.
 
-\begin{definition}[Función \(\phi\) de Euler]
+\subsection{Función \(\phi\) de Euler}
 La función \(\phi(n)\) cuenta el número de enteros positivos menores o iguales que \( n \) que son coprimos con \( n \).
-\end{definition}
 
-\begin{theorem}[Propiedad de la función \(\phi\)]
-Si \( p_1, p_2, \dots, p_k \) son los factores primos distintos de \( n \), entonces:
-\[
-\phi(n) = n \left(1 - \frac{1}{p_1}\right) \left(1 - \frac{1}{p_2}\right) \dots \left(1 - \frac{1}{p_k}\right)
-\]
-\end{theorem}
+Dos numeros son "coprimos" cuando el \(gcd(a, b)\ = 1\)
 
-\begin{example}
-Para \( n = 12 \), los factores primos son 2 y 3, por lo que:
-\[
-\phi(12) = 12 \left(1 - \frac{1}{2}\right)\left(1 - \frac{1}{3}\right) = 12 \times \frac{1}{2} \times \frac{2}{3} = 4
-\]
-\end{example}
+La funcion \(phi\) hasta 21:
+\begin{center}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+    \hline
+    $n$ & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 & 16 & 17 & 18 & 19 & 20 & 21 \\
+    \hline
+    $\phi(n)$ & 1 & 1 & 2 & 2 & 4 & 2 & 6 & 4 & 6 & 4 & 10 & 4 & 12 & 6 & 8 & 8 & 16 & 6 & 18 & 8 & 12 \\
+    \hline
+    \end{tabular}
+\end{center}
+
+\subsubsection{Propiedades}
+\begin{itemize}
+    \item Si \( p_1, p_2, \dots, p_k \) son los factores primos distintos de \( n \), entonces:
+    \[
+    \phi(n) = n \left(1 - \frac{1}{p_1}\right) \left(1 - \frac{1}{p_2}\right) \dots \left(1 - \frac{1}{p_k}\right)
+    \]
+    \item Si \(p\) es un numero primo, entonces el \(gcd(p, q) = 1\) para todo \(1\leq q < p\) Entonces tenemos:
+        \[
+            \phi (p) = p - 1.
+        \]
+    \item Si \(p\) es un numero primo y \(k \geq 1\) entonces hay exactamente \(\frac{p^k}{p}\) entre \(1\) y \(p^k\) que son divisibles por \(p\) Lo que nos da:
+     \[\phi(p^k) = p^k - p^{k-1}.\]
+    \item Si \(a\) y \(b\) son coprimos, entonces:
+    \[\phi(a b) = \phi(a) \cdot \phi(b).\]
+    \item De la propiedad de arriba se extiende que, si \(a\) es un número con una factorización prima:
+
+    \[
+    a = p_1^{e_1} \cdot p_2^{e_2} \cdot \ldots \cdot p_k^{e_k}
+    \]
+
+    donde \(p_1, p_2, \ldots, p_k\) son primos distintos y \(e_1, e_2, \ldots, e_k\) son exponentes enteros positivos, entonces la función \(\phi(a)\) se calcula como:
+
+    \[\phi(a) = \phi(p_1)^{e_1}\cdot \phi(p_2)^{e_2}\cdot \ldots \cdot \phi(p_k)^{e_k}\]
+    Ojo, si ya tienes la criba con los primos, facil puedes precalcular la funcion phi de un numero, entonces con la factorizacion del numero en \(\O\log(n)\) podemos facil tener el resultado del la funcion \(\phi\)
+
+\end{itemize}
+
 
 \section{Conclusiones}
 
