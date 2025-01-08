@@ -182,9 +182,36 @@ La funcion \(phi\) hasta 21:
 
     \[\phi(a) = \phi(p_1)^{e_1}\cdot \phi(p_2)^{e_2}\cdot \ldots \cdot \phi(p_k)^{e_k}\]
     Ojo, si ya tienes la criba con los primos, facil puedes precalcular la funcion phi de un numero, entonces con la factorizacion del numero en \(\O\log(n)\) podemos facil tener el resultado del la funcion \(\phi\)
+    \item Esta propiedad interesante fue obtenida por Gauss:
+     \[\sum_{d|n} \phi{(d)} = n\]
+    Es decir la suma de todos los divisores de \(n\).
+    
+    Por ejemplo, los divisores de \(10\) son \(1, 2, 5, 10\). Entonces: \(\phi(1) + \phi(2) + \phi(5) +  \phi(10) = 1 + 1 + 4 + 4 = 10\)
 
 \end{itemize}
+\subsubsection{Aplicacion}
+La propiedad mas famosa e importante es expresada en \textbf{el teorema de Euler:}
+\[a^{\phi(m)} \equiv 1 \pmod m \quad \text{Si } a \text{ y } m \text{ son coprimos.}\]
+Cuando \(m\) es primo, el teorema de Euler se convierte en el \textbf{pequeno teorema de Fermat}
+\[a^{m - 1} \equiv 1 \pmod m\]
+El teorema de euler tiene aplicaciones practicas como \textbf{calcular el inverso multiplicativo modular} 
 
+Como inmediata consecuencia de esto sabemos que:
+\[a^n \equiv a^{n \bmod \phi(m)} \pmod m\]
+
+\subsubsection{Teoría de Grupos}
+
+\(\phi(n)\) es el orden del grupo multiplicativo módulo \(n\), denotado como \((\mathbb{Z} / n\mathbb{Z})^\times\). Este es el grupo de unidades (elementos con inversos multiplicativos). Los elementos con inversos multiplicativos son precisamente aquellos coprimos con \(n\).
+
+****El orden multiplicativo de un elemento \(a\) módulo \(n\), denotado como \(\operatorname{ord}_n(a)\), es el menor entero positivo \(k > 0\) tal que:****
+
+\[
+a^k \equiv 1 \pmod{n}.
+\]
+
+\(\operatorname{ord}_n(a)\) es el tamaño del subgrupo generado por \(a\). Por el Teorema de Lagrange, el orden multiplicativo de cualquier \(a\) debe dividir a \(\phi(n)\).
+
+Si el orden multiplicativo de \(a\) es exactamente \(\phi(n)\) (el máximo posible), entonces \(a\) es una raíz primitiva y el grupo es cíclico por definición.
 
 \section{Conclusiones}
 
