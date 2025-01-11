@@ -187,7 +187,8 @@ La funcion \(phi\) hasta 21:
     Es decir la suma de todos los divisores de \(n\).
     
     Por ejemplo, los divisores de \(10\) son \(1, 2, 5, 10\). Entonces: \(\phi(1) + \phi(2) + \phi(5) +  \phi(10) = 1 + 1 + 4 + 4 = 10\)
-
+    \item Para \(x \geq 3\) el valor de \(\phi (x)\) siempre sera par, para \(x = 1 \text{ y } x = 2\) el valor de \(\phi (x)\) es \(1\)
+    \item Por consecuencia para \(x \geq 3\) el valor de \(\phi (x)\) no sera primo. \textbf{(Comprobado solo hasta \(x \leq 10^9\))} 
 \end{itemize}
 \subsubsection{Aplicacion}
 La propiedad mas famosa e importante es expresada en \textbf{el teorema de Euler:}
@@ -198,7 +199,8 @@ El teorema de euler tiene aplicaciones practicas como \textbf{calcular el invers
 
 Como inmediata consecuencia de esto sabemos que:
 \[a^n \equiv a^{n \bmod \phi(m)} \pmod m\]
-
+\subsubsection{Exponenciacion \(x^y\) para un \(y\) demasaido grande}
+\[x^{n}\equiv x^{\phi(m)+[n \bmod \phi(m)]} \mod m\]
 \subsubsection{Teoría de Grupos}
 
 \(\phi(n)\) es el orden del grupo multiplicativo módulo \(n\), denotado como \((\mathbb{Z} / n\mathbb{Z})^\times\). Este es el grupo de unidades (elementos con inversos multiplicativos). Los elementos con inversos multiplicativos son precisamente aquellos coprimos con \(n\).
@@ -212,6 +214,9 @@ a^k \equiv 1 \pmod{n}.
 \(\operatorname{ord}_n(a)\) es el tamaño del subgrupo generado por \(a\). Por el Teorema de Lagrange, el orden multiplicativo de cualquier \(a\) debe dividir a \(\phi(n)\).
 
 Si el orden multiplicativo de \(a\) es exactamente \(\phi(n)\) (el máximo posible), entonces \(a\) es una raíz primitiva y el grupo es cíclico por definición.
+
+
+
 
 \section{Conclusiones}
 

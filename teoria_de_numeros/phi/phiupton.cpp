@@ -1,9 +1,9 @@
-vector<int> phi(n + 1);
-void phi(int n) {
-	for (int i = 0; i <= n; i++) phi[i] = i;
-	for (int i = 2; i <= n; i++) {
+vector<int> phi(tam + 1);
+void euler(int tam) {
+	for (int i = 0; i <= tam; i++) phi[i] = i;
+	for (int i = 2; i <= tam; i++) {
 		if (phi[i] == i) {
-			for (int j = i; j <= n; j += i) phi[j] -= phi[j] / i;
+			for (int j = i; j <= tam; j += i) phi[j] -= phi[j] / i;
 		}
 	}
 }

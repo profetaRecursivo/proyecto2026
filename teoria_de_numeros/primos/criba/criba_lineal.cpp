@@ -1,16 +1,15 @@
-const int N  = 9999700;
-vector<int> spf(N + 1);
+vector<int> spf(tam + 1);
 vector<int> prim;
 void sieve()
 {
-    for (int i = 2; i <= N; ++i)
+    for (int i = 2; i <= tam; ++i)
     {
         if (spf[i] == 0)
         {
             spf[i] = i;
             prim.push_back(i);
         }
-        for (int j = 0; i * prim[j] <= N; ++j)
+        for (int j = 0; i * prim[j] <= tam; ++j)
         {
             spf[i * prim[j]] = prim[j];
             if (prim[j] == spf[i])
