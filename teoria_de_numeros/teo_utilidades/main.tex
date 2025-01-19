@@ -189,7 +189,6 @@ La funcion \(phi\) hasta 21:
     Por ejemplo, los divisores de \(10\) son \(1, 2, 5, 10\). Entonces: \(\phi(1) + \phi(2) + \phi(5) +  \phi(10) = 1 + 1 + 4 + 4 = 10\)
     \item Para \(x \geq 3\) el valor de \(\phi (x)\) siempre sera par, para \(x = 1 \text{ y } x = 2\) el valor de \(\phi (x)\) es \(1\)
     \item Por consecuencia para \(x \geq 3\) el valor de \(\phi (x)\) no sera primo. \textbf{(Comprobado solo hasta \(x \leq 10^9\))} 
-    \item Otra propiedad interesante, "factorizacion"
 \end{itemize}
 \subsubsection{Aplicacion}
 La propiedad mas famosa e importante es expresada en \textbf{el teorema de Euler:}
@@ -216,8 +215,10 @@ a^k \equiv 1 \pmod{n}.
 
 Si el orden multiplicativo de \(a\) es exactamente \(\phi(n)\) (el máximo posible), entonces \(a\) es una raíz primitiva y el grupo es cíclico por definición.
 
-
-
+\subsection{Suma y cantidad de divisores}
+\subsubsection{Cantidad de divisores}
+    Si la factorizacion de un numero \(n\) es \(p_1^{e_1} \cdot p_2^{e_2} \cdots p_k^{e_k}\) donde \(p_i\) son primos distintos, entonces el numero de divisores es:
+        \[d(n) = (e_1 + 1) \cdot (e_2 + 1) \cdots (e_k + 1)\]
 
 \section{Conclusiones}
 
