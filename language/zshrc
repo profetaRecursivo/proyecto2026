@@ -1,0 +1,5 @@
+calc(){ echo $(($@)) }
+
+gcom() { g++ -o ejec "$1" && ./ejec < in }
+
+alias nuevo="rm in && nano in"
