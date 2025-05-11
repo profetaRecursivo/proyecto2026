@@ -1,2 +1,5 @@
 .vscode
 .cph
+*.log
+*.aux
+*.out

@@ -219,9 +219,66 @@ Si el orden multiplicativo de \(a\) es exactamente \(\phi(n)\) (el máximo posib
 \subsubsection{Cantidad de divisores}
     Si la factorizacion de un numero \(n\) es \(p_1^{e_1} \cdot p_2^{e_2} \cdots p_k^{e_k}\) donde \(p_i\) son primos distintos, entonces el numero de divisores es:
         \[d(n) = (e_1 + 1) \cdot (e_2 + 1) \cdots (e_k + 1)\]
+\section{Bitmasks}
+    \subsection{Bitwise Identities}
 
-\section{Conclusiones}
+    \begin{itemize}
+        \item $x + y = (x \oplus y) + 2 \cdot (x \& y)$
+        \item $x \oplus y = (x \mid y) - (x \& y)$
+        \item $\sim x = -x - 1$ \hfill (complemento a dos)
+        \item $(x \oplus y) \oplus y = x$
+        \item $x \oplus x = 0$
+        \item $x \& (x - 1)$ borra el bit más bajo prendido de $x$
+        \item $x \& (-x)$ aísla el bit más bajo prendido
+        \item $x$ es potencia de 2 $\iff x \& (x - 1) = 0$
+        \item \texttt{\_\_builtin\_popcount(x)} cuenta los bits prendidos en $x$
+        \item $x \% 2^k = x \& (2^k - 1)$
+    \end{itemize}
+    \subsection{Identidades b\'asicas:}
+        \begin{itemize}
+            \item $x + y = (x \oplus y) + 2 \cdot (x \& y)$
+            \item $x \oplus y = (x \mid y) - (x \& y)$
+            \item $\sim x = -x - 1$
+            \item $(x \oplus y) \oplus y = x$
+            \item $x \oplus x = 0$
+            \item $x \oplus 0 = x$
+        \end{itemize}
+    \subsection{Propiedades de XOR}
+        \begin{itemize}
+            \item XOR es asociativo: $(a \oplus b) \oplus c = a \oplus (b \oplus c)$
+            \item XOR es conmutativo: $a \oplus b = b \oplus a$
+            \item $a \oplus a = 0$ \quad y \quad $a \oplus 0 = a$
+            \item Si $a \oplus b = c$ entonces $a = b \oplus c$
+        \end{itemize}
+    \subsection{Bits útiles para manipulación}
+        \begin{itemize}
+            \item $x \& (x - 1)$: borra el bit más bajo prendido
+            \item $x \& -x$: aísla el bit más bajo prendido
+            \item $x \mid (x - 1)$: prende todos los bits a la derecha del más bajo prendido
+            \item $x$ es potencia de dos $\iff x \& (x - 1) = 0$
+            \item $x \% 2^k = x \& (2^k - 1)$
+            \item $x \uparrow 1$ (o $x \ll 1$): multiplica por 2
+            \item $x \downarrow 1$ (o $x \gg 1$): divide por 2 (sin signo)
+        \end{itemize}
+    \subsection{Conteo de bits y máscaras}
+        \begin{itemize}
+            \item \texttt{\_\_builtin\_popcount(x)}: número de bits prendidos
+            \item \texttt{\_\_builtin\_ctz(x)}: cantidad de ceros a la derecha (trailing zeros)
+            \item \texttt{\_\_builtin\_clz(x)}: cantidad de ceros a la izquierda (leading zeros)
+            \item Total de subconjuntos de una máscara $x$: $2^{\texttt{popcount}(x)}$
+            \item Recorrer todos los subconjuntos de $x$:
+            
+            \begin{verbatim}
+            for (int sub = x; sub; sub = (sub - 1) & x)
+                // usar sub
+            \end{verbatim}
+        \end{itemize}
 
-La teoría de números es una de las ramas más antiguas de las matemáticas y sigue siendo un área activa de investigación. Desde su aplicación en criptografía hasta su influencia en otras ramas matemáticas, los resultados de esta teoría continúan jugando un papel crucial.
+    \subsection{Extra (interesante para DP o teoría de bits)}
+    \begin{itemize}
+        \item $(x \oplus y) + 2 \cdot (x \& y) = x + y$
+        \item $x + y = x \mid y + (x \& y)$ \hfill (no exacto, pero útil en razonamiento)
+        \item Para todo $x$, $x \oplus (x - 1)$ tiene todos los bits a la derecha del más alto en $1$
+    \end{itemize}
 
 \end{document}
