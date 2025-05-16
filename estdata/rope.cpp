@@ -10,22 +10,4 @@ operator[]              O(log n)           Accede al i-ésimo elemento
 report(start, end)      O(log n + len)     Similar a substr, útil para debugging o extracción
 */
 #include <ext/rope>
-#include <bits/stdc++.h>
 using namespace __gnu_cxx;
-using namespace std;
-
-signed main(){
-    int n;cin>>n;
-    rope<int> rp;
-    for(int i = 0; i<n; i++){
-        int x;cin>>x;
-        rp.push_back(x);
-    }
-    //ineficiente para 10^5*18
-    //funciona mejor con subcadenas
-    for(int i = 0; i<n;i ++){
-        int pos;cin>>pos;
-        cout<<rp[pos-1]<<" ";
-        rp.erase(pos-1, 1);
-    }
-}
