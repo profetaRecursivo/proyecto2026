@@ -5,7 +5,7 @@ using namespace std;
 #include <ext/pb_ds/tree_policy.hpp> 
 using namespace __gnu_pbds; 
 
-#define ordered_set tree<int, null_type,less<int>, rb_tree_tag,tree_order_statistics_node_update> 
+#define ordered_set tree<int, null_type, less<int>, rb_tree_tag,tree_order_statistics_node_update> 
 //greater or less
 
 signed main(){
@@ -13,9 +13,11 @@ signed main(){
     oset.insert(3);
     oset.insert(5);
     oset.insert(1);
+    //[1 3 5]
+    //[0 1 2]
     //cantidad de elementos menores a 4, o 
     //como decir, en que posicion deberia de estar el 4
-    cout<<(int)oset.order_of_key(0)<<endl;
+    cout<<(int)oset.order_of_key(2)<<endl;
     cout<<*(oset.find_by_order(0))<<endl;
 }
 

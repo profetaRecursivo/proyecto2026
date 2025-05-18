@@ -8,13 +8,15 @@ typedef pair<int, int> pii;
 typedef tree<pii, null_type, less<pii>, rb_tree_tag,
 			 tree_order_statistics_node_update>
 	ordered_ms;
+	
 struct ordMultiset {
+	
 	int count;
 	ordered_ms oset;
+
 	ordMultiset() { count = 0; }
 	// o que posicion le corresponde
 	int count_oc(int x) {
-		// Elementos < {x+1, 0} menos elementos < {x, 0}
 		return oset.order_of_key({x + 1, 0}) - oset.order_of_key({x, 0});
 	}
 	void erase_one(int x) {
