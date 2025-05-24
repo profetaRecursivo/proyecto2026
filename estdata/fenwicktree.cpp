@@ -1,9 +1,8 @@
 vector<ll> bit;
 vector<ll> arr;
-int tam;
-
+int n;
 void update(int pos, ll delta){
-    while (pos < tam) {
+    while (pos < n) {
         bit[pos] += delta;
         pos += pos & -pos;
     }
