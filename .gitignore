@@ -4,3 +4,4 @@
 *.aux
 *.out
 *.code-snippets
+.clang-format
