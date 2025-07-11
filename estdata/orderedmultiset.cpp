@@ -8,9 +8,8 @@ typedef pair<int, int> pii;
 typedef tree<pii, null_type, less<pii>, rb_tree_tag,
 			 tree_order_statistics_node_update>
 	ordered_ms;
-	
+
 struct ordMultiset {
-	
 	int count;
 	ordered_ms oset;
 
@@ -23,6 +22,19 @@ struct ordMultiset {
 		auto it = oset.lower_bound({x, 0});
 		if (it != oset.end() && it->first == x) { oset.erase(it); }
 	}
+
+	int count_less(int x) { return oset.order_of_key({x, 0}); }
+
+	int count_less_equal(int x) { return oset.order_of_key({x + 1, 0}); }
+
+	int count_greater(int x) {
+		return (int)oset.size() - oset.order_of_key({x + 1, 0});
+	}
+
+	int count_greater_equal(int x) {
+		return (int)oset.size() - oset.order_of_key({x, 0});
+	}
+
 	// 0 indexed
 	int kth_element(int k) { return oset.find_by_order(k)->first; }
 

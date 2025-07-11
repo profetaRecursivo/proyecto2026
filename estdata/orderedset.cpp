@@ -13,6 +13,26 @@ using ordered_set = tree<
     rb_tree_tag,
     tree_order_statistics_node_update
 >;
+template<typename T>//esto se puede borrar si pongo de argumento que llega un oset de int, double, etc
+// Cuántos elementos estrictamente menores que x (< x)
+int count_less(const ordered_set<T>& os, T x) {
+    return os.order_of_key(x);
+}
+template<typename T>
+// Cuántos elementos menores o iguales que x (≤ x)
+int count_less_equal(const ordered_set<T>& os, T x) {
+    return os.order_of_key(x + 1);  // SOLO si T es numérico (int, long long)
+}
+template<typename T>
+// Cuántos elementos estrictamente mayores que x (> x)
+int count_greater(const ordered_set<T>& os, T x) {
+    return (int)os.size() - os.order_of_key(x + 1);  // SOLO si T es numérico
+}
+template<typename T>
+// Cuántos elementos mayores o iguales que x (≥ x)
+int count_greater_equal(const ordered_set<T>& os, T x) {
+    return (int)os.size() - os.order_of_key(x);
+}
 //greater or less
 
 signed main(){
