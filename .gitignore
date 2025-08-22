@@ -5,3 +5,5 @@
 *.out
 *.code-snippets
 .clang-format
+main.f*
+main.s*
