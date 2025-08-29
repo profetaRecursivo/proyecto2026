@@ -2,6 +2,9 @@
 
 % Paquetes necesarios
 \usepackage{amsthm}  % Para los entornos theorem, definition, etc.
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
 \usepackage{amsmath}  % Para matemáticas avanzadas
 \usepackage{amssymb}  % Para símbolos matemáticos
 \usepackage{geometry}  % Para personalizar márgenes
@@ -284,6 +287,35 @@ Si el orden multiplicativo de \(a\) es exactamente \(\phi(n)\) (el máximo posib
         \subsection{Shortest paths}
             Un camino s \(\rightarrow\) \(\cdots\) \(\rightarrow\) u \(\rightarrow\) v es mínimo \(\iff\) 
         \[dist_u + w(u,v) = dist_v\]
-        
+    \section{Operaciones asociativas}
+    \begin{table}[H]
+        \centering
+        \small
+        \renewcommand{\arraystretch}{1.3}
+        \begin{tabular}{|l|c|c|c|}
+        \hline
+        \textbf{Operación} & \textbf{Ejemplo} & \textbf{Asociativa} & \textbf{Idempotente} \\
+        \hline
+        Suma $(a+b)$ & $(1+2)+3 = 1+(2+3)$ & Sí & No \\
+        Producto $(a \cdot b)$ & $(2\cdot 3)\cdot 4 = 2\cdot(3\cdot 4)$ & Sí & No \\
+        Resta $(a-b)$ & $(5-3)-2 \neq 5-(3-2)$ & No & No \\
+        División $(a/b)$ & $(12/6)/2 \neq 12/(6/2)$ & No & No \\
+        Exponenciación $(a^b)$ & $(2^3)^2 \neq 2^{(3^2)}$ & No & No \\
+        Mínimo / Máximo & $\max(\max(a,b),c) = \max(a,\max(b,c))$ & Sí & Sí \\
+        MCD $\gcd(a,b)$ & $\gcd(\gcd(12,18),6)=6$ & Sí & Sí \\
+        MCM $\mathrm{lcm}(a,b)$ & $\mathrm{lcm}(\mathrm{lcm}(2,3),6)$ & Sí & No \\
+        XOR $(a \oplus b)$ & $(a\oplus b)\oplus c = a\oplus(b\oplus c)$ & Sí & No \\
+        AND bit a bit $(a \,\&\, b)$ & $(a\&b)\&c = a\&(b\&c)$ & Sí & Sí \\
+        OR bit a bit $(a \mid b)$ & $(a\mid b)\mid c = a\mid(b\mid c)$ & Sí & Sí \\
+        Unión de conjuntos & $(A\cup B)\cup C = A\cup(B\cup C)$ & Sí & Sí \\
+        Intersección de conjuntos & $(A\cap B)\cap C = A\cap(B\cap C)$ & Sí & Sí \\
+        Diferencia de conjuntos $(A-B)$ & $(A-B)-C \neq A-(B-C)$ & No & No \\
+        Concatenación de strings & $(ab)c = a(bc)$ & Sí & No \\
+        Promedio $\frac{a+b}{2}$ & $\frac{(a+b)}{2}$ agrupado cambia & No & No \\
+        Multiplicación de matrices & $(AB)C = A(BC)$ & Sí & No \\
+        \hline
+        \end{tabular}
+        \end{table}
+
 
 \end{document}
