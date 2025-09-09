@@ -1,10 +1,4 @@
-#include <iostream>
-#include <vector>
-
-using namespace std;
-
 const int MOD = 1e9 + 7; // Usar módulo si se necesita para evitar overflow
-
 // Multiplica dos matrices
 vector<vector<int>> multiplicarMatrices(const vector<vector<int>>& A, const vector<vector<int>>& B) {
     int n = A.size();
@@ -18,7 +12,6 @@ vector<vector<int>> multiplicarMatrices(const vector<vector<int>>& A, const vect
     }
     return resultado;
 }
-
 vector<vector<int>> exponenciarMatriz(vector<vector<int>> base, int k) {
     int n = base.size();
     vector<vector<int>> resultado(n, vector<int>(n, 0));
@@ -37,13 +30,8 @@ vector<vector<int>> exponenciarMatriz(vector<vector<int>> base, int k) {
 
 int main() {
     int n, k;
-    cout << "Introduce el número de vértices (n): ";
-    cin >> n;
-    cout << "Introduce la longitud del camino (k): ";
-    cin >> k;
-
+    cin>>n>>k;
     vector<vector<int>> matriz(n, vector<int>(n));
-    cout << "Introduce la matriz de adyacencia (n x n):\n";
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             cin >> matriz[i][j];

@@ -1,5 +1,4 @@
 ll fact[tam], invFact[tam];
-
 void prec() {
     fact[0] = 1;
     for (int i = 1; i < tam; i++) {

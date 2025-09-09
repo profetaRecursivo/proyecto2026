@@ -1,12 +1,9 @@
-#include <bits/stdc++.h>
-using namespace std;
 const int tam = 100010;
-
 struct Node{
     int x;
     //algo
-    Node(int _x){x = _x;}
-    static Node merge(const Node&a, const Node& b){
+    Node(int _x = 0/*para poner por default y no necesitar constructor por defecto*/){x = _x;}
+    static inline Node merge(const Node&a, const Node& b){
         return Node(a.x + b.x);
     }
 };
@@ -19,7 +16,7 @@ void init(int b, int e, int node){
         t[node] = Node(arr[b]);
         return;
     }
-    int mid = (b+e)>>1, l = node << 1 + 1, r = l+1;
+    int mid = (b+e)>>1, l = (node << 1) | 1, r = l+1;
     init(b, mid, l);
     init(mid+1, e, r);
     t[node] = Node::merge(t[l], t[r]);
@@ -29,7 +26,7 @@ Node query(int b, int e, int node, int i, int j){
     if(i<=b and j>=e){
         return t[node];
     }
-    int mid = (b+e)>>1, l = node << 1 + 1, r = l+1;
+    int mid = (b+e)>>1, l = (node << 1) | 1, r = l+1;
     if(mid >= j)
         return query(b, mid, l, i, j);
     if(mid < i)
@@ -43,7 +40,7 @@ void update(int b, int e, int node, int pos, Node& val){
         t[node] = val;
         return;
     }
-    int mid = (b+e)>>1, l = node << 1 + 1, r = l+1;
+    int mid = (b+e)>>1, l = (node << 1) | 1, r = l+1;
     if(pos <= mid){
         update(b, mid, l, pos, val);
     }else{

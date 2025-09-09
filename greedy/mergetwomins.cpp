@@ -1,4 +1,5 @@
 //O(n + maxelement)
+Dado un conjunto de números, quieres sumarlos todos en pares de manera que el costo total de sumar sea mínimo.
 void solve() {
     int n;
     cin >> n;
