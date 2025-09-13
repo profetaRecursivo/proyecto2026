@@ -26,11 +26,11 @@ int query(int node, int b, int e, int i, int j, int x){
         return *it;
     }
     int mid = (b+e)/2, l = 2*node, r = 2*node+1;
-    if(mid >= r)
+    if(mid >= j)
         return query(l, b, mid, i, j, x);
     if(mid < i)
-        return query(r, mid+1, i, j, x);
-    return min(query(l, b, mid, i, j, x), query(r, mid+1, i, j, x));
+        return query(r, mid+1,e, i, j, x);
+    return min(query(l, b, mid, i, j, x), query(r, mid+1,e, i, j, x));
 }
 
 
