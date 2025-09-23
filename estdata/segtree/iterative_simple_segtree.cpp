@@ -1,31 +1,36 @@
+const int tam = POTENCIA DE DOS;
 struct Node{
-    int x;
-    Node(int _x = 0){
-        x = _x;
+    int maxi;
+    int idx;
+    Node(int _x = -INF, int _i = -1){
+        maxi = _x; idx = _i;
     }
     static inline Node merge(const Node& a, const Node& b){
-        return Node(a.x | b.x);
+        if(a.maxi > b.maxi) return Node(a.maxi, a.idx);
+        else return Node(b.maxi, b.idx);
     }
 };
-const int N = 1<<17;
-int n; 
-Node t[2*N]; 
+int n;
+Node t[2 * tam];
 
-void build() {
-    for (int i = n-1; i > 0; --i)
-        t[i] = Node::merge(t[i<<1],  t[i<<1|1]);
+void build(){
+    for(int i = n - 1; i > 0; --i){
+        t[i] = Node::merge(t[i << 1], t[(i << 1) | 1]);
+    }
 }
 
-void modify(int p, int value) {
-    for (t[p += n] = value; p > 1; p >>= 1)
-        t[p>>1] = Node::merge(t[p], t[p^1]);
+void update(int p, Node value){
+    for(t[p += n] = value; p > 1; p >>= 1){
+        t[p >> 1] = Node::merge(t[p], t[p ^ 1]);
+    }
 }
 
-Node query(int l, int r) {
+Node query(int l, int r){
+    r++;
     Node izq, der;
-    for (l += n, r += n; l < r; l >>= 1, r >>= 1) {
-        if (l&1) izq = Node::merge( izq, t[l++]);
-        if (r&1) der = Node::merge( der, t[--r]);
+    for(l += n, r += n; l < r; l >>= 1, r >>= 1){
+        if(l & 1) izq = Node::merge(izq, t[l++]);
+        if(r & 1) der = Node::merge(der, t[--r]); 
     }
     return Node::merge(izq, der);
 }
