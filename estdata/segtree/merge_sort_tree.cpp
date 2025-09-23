@@ -43,3 +43,17 @@ int query(int node, int b, int e, int i, int j, int x, int y) {
   return query(2*node, b, (b+e)/2, i, j, x, y) +
          query(2*node+1, (b+e)/2+1, e, i, j, x, y);
 }
+//un multiset
+void update(int v, int tl, int tr, int pos, int new_val) {
+    t[v].erase(t[v].find(a[pos]));
+    t[v].insert(new_val);
+    if (tl != tr) {
+        int tm = (tl + tr) / 2;
+        if (pos <= tm)
+            update(v*2, tl, tm, pos, new_val);
+        else
+            update(v*2+1, tm+1, tr, pos, new_val);
+    } else {
+        a[pos] = new_val;
+    }
+}

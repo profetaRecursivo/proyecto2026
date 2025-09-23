@@ -190,4 +190,33 @@ Este enfoque tiene una complejidad de \textbf{$O(n)$}, ya que procesamos cada el
 \subsubsection{Implementación}
 La implementacion esta en la pagina XX del notebook
 
+\subsection{Inverso de la suma de Gauss y cota superior}
+
+La suma de Gauss de los primeros $n$ enteros positivos se define como:
+\[
+S(n) = 1 + 2 + 3 + \dots + n = \frac{n(n+1)}{2}.
+\]
+
+Si queremos encontrar el número $n$ dado un $S$ conocido (es decir, el inverso de la suma de Gauss), resolvemos:
+\[
+\frac{n(n+1)}{2} = S \implies n^2 + n - 2S = 0.
+\]
+
+Aplicando la fórmula cuadrática obtenemos:
+\[
+n = \frac{-1 + \sqrt{1 + 8S}}{2}.
+\]
+
+\medskip
+\textbf{Cota superior:} Si $S$ no es exactamente una suma de Gauss, podemos buscar el menor $n$ tal que
+\[
+1 + 2 + \dots + n \ge S.
+\]
+
+La solución es:
+\[
+n = \left\lceil \frac{-1 + \sqrt{1 + 8S}}{2} \right\rceil,
+\]
+donde $\lceil \cdot \rceil$ denota el techo (el menor entero mayor o igual al valor).
+
 \end{document}
