@@ -317,5 +317,92 @@ Si el orden multiplicativo de \(a\) es exactamente \(\phi(n)\) (el máximo posib
         \end{tabular}
         \end{table}
 
+\section{trailing ceros}
+\[
+\text{ceros}(n!) \;=\; \left\lfloor \frac{n}{5} \right\rfloor + \left\lfloor \frac{n}{5^2} \right\rfloor + \left\lfloor \frac{n}{5^3} \right\rfloor + \cdots
+\]
+
+La idea es que los ceros al final de un factorial provienen de los factores $10 = 2 \cdot 5$.
+Como los números pares aportan más factores de $2$ que de $5$, el número de ceros está
+determinado únicamente por la cantidad de veces que aparece el factor $5$ en la factorización de $n!$.
+Por eso se suman todos los múltiplos de $5$, de $25$, de $125$, etc.
+
+---
+
+\[
+e_p(n!) \;=\; \left\lfloor \frac{n}{p} \right\rfloor + \left\lfloor \frac{n}{p^2} \right\rfloor + \left\lfloor \frac{n}{p^3} \right\rfloor + \cdots
+\]
+
+Más generalmente, la cantidad de veces que un primo $p$ aparece en la factorización de $n!$
+se obtiene sumando los múltiplos de $p$, de $p^2$, de $p^3$, y así sucesivamente.
+
+---
+
+\textbf{Ejemplo con un primo:}
+
+Si $n = 100$ y $p = 2$:
+
+\[
+\left\lfloor \frac{100}{2} \right\rfloor +
+\left\lfloor \frac{100}{4} \right\rfloor +
+\left\lfloor \frac{100}{8} \right\rfloor +
+\cdots
+= 50 + 25 + 12 + 6 + 3 + 1 = 97
+\]
+
+Por lo tanto:
+
+\[
+e_2(100!) = 97
+\]
+
+es decir, el número $2$ aparece $97$ veces en la factorización prima de $100!$.
+
+---
+
+\textbf{Ejemplo con un número compuesto:}
+
+Si se quiere calcular cuántas veces aparece un número compuesto $k$ en $n!$, primero se factoriza:
+
+\[
+k = p_1^{a_1} \cdot p_2^{a_2} \cdot \ldots \cdot p_m^{a_m}
+\]
+
+Luego, para cada primo $p_i$, se calcula $e_{p_i}(n!)$.  
+La cantidad de veces que aparece $k$ como factor de $n!$ es:
+
+\[
+\min_i \; \left\lfloor \frac{e_{p_i}(n!)}{a_i} \right\rfloor
+\]
+
+---
+
+\textbf{Ejemplo con $k=12$:}
+
+\[
+12 = 2^2 \cdot 3
+\]
+
+Ya sabemos que:
+
+\[
+e_2(100!) = 97, \quad e_3(100!) = 48
+\]
+
+Entonces:
+
+\[
+\left\lfloor \frac{97}{2} \right\rfloor = 48, 
+\quad 
+\left\lfloor \frac{48}{1} \right\rfloor = 48
+\]
+
+Por lo tanto:
+
+\[
+12^{48} \mid 100!, 
+\quad 
+12^{49} \nmid 100!
+\]
 
 \end{document}
