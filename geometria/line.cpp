@@ -8,14 +8,19 @@ struct line {
   };
   void setOrigin(pto p) { c += a * p.x + b * p.y; } //trasladar linea como si p fuera el origen
   void normalize(){
-    int g = gcd(a, gcd(b, c));
+    int g = gcd(abs(a), gcd(abs(b), abs(c)));
     a/=g;
     b/=g;
     c/=g;
     if(a < 0 or (a == 0 and b < 0))
         a*=-1, b*=-1, c*=-1;
   }//normalizamos para poder comprar la igualdad de dos lineas
+  const bool operator==(const line& otro) const {
+    return a == otro.a and b == otro.b and c == otro.c;
+  }
+
 };
+//si el determinante entre dos lineas es cero, son paralelas, pracicamente un prod cruz
 double det(double a, double b, double c, double d) {
 	return a * d - b * c;
 }
