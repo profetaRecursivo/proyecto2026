@@ -1,0 +1,3179 @@
+\documentclass[10pt]{article}
+
+% Paquetes necesarios
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multicol}
+
+% Configuración de márgenes más pequeños para caber más contenido
+\geometry{a4paper, margin=0.5in}
+
+\setlength{\headheight}{15pt}
+
+% Configuración para código C++
+\lstset{
+  language=C++,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  stringstyle=\color{red},
+  commentstyle=\color{green!60!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=5pt,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  tabsize=2,
+  breaklines=true,
+  breakatwhitespace=false,
+  showstringspaces=false
+}
+
+% Entornos
+\newtheorem{theorem}{Teorema}[section]
+\newtheorem{definition}[theorem]{Definición}
+\newtheorem{algorithm}[theorem]{Algoritmo}
+
+% Encabezado
+\pagestyle{fancy}
+\fancyhead[L]{Geometría Computacional - Programación Competitiva}
+\fancyhead[R]{\thepage}
+
+\title{\textbf{Geometría Computacional} \\ \large Cheatsheet para Programación Competitiva}
+\author{Jaime Sebastian Chavarria Fuertes}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Estructuras Básicas}
+
+\subsection{Punto en 2D}
+
+\begin{lstlisting}
+struct Point {
+    double x, y;
+    
+    Point() : x(0), y(0) {}
+    Point(double x, double y) : x(x), y(y) {}
+    
+    // Operadores
+    Point operator+(const Point& p) const {
+        return Point(x + p.x, y + p.y);
+    }
+    Point operator-(const Point& p) const {
+        return Point(x - p.x, y - p.y);
+    }
+    Point operator*(double t) const {
+        return Point(x * t, y * t);
+    }
+    Point operator/(double t) const {
+        return Point(x / t, y / t);
+    }
+    
+    // Comparacion (para usar en set/map)
+    bool operator<(const Point& p) const {
+        if (abs(x - p.x) > EPS) return x < p.x;
+        return y < p.y;
+    }
+    bool operator==(const Point& p) const {
+        return abs(x - p.x) < EPS && abs(y - p.y) < EPS;
+    }
+};
+
+const double EPS = 1e-9;
+const double PI = acos(-1.0);
+\end{lstlisting}
+
+\subsection{Operaciones Básicas con Puntos}
+
+\begin{lstlisting}
+// Distancia entre dos puntos
+double dist(Point a, Point b) {
+    return hypot(a.x - b.x, a.y - b.y);
+}
+
+// Distancia al cuadrado (evita sqrt para comparaciones)
+double dist2(Point a, Point b) {
+    return (a.x - b.x) * (a.x - b.x) + 
+           (a.y - b.y) * (a.y - b.y);
+}
+
+// Magnitud (norma) de un vector
+double norm(Point p) {
+    return hypot(p.x, p.y);
+}
+
+// Vector unitario
+Point unit(Point p) {
+    return p / norm(p);
+}
+
+// Rotar punto por angulo theta (en radianes)
+Point rotate(Point p, double theta) {
+    return Point(p.x * cos(theta) - p.y * sin(theta),
+                 p.x * sin(theta) + p.y * cos(theta));
+}
+
+// Rotar punto alrededor de otro punto
+Point rotate(Point p, Point center, double theta) {
+    return rotate(p - center, theta) + center;
+}
+\end{lstlisting}
+
+\subsection{Producto Punto (Dot Product)}
+
+\[
+\boxed{
+\vec{u} \cdot \vec{v} = u_x \cdot v_x + u_y \cdot v_y = |\vec{u}||\vec{v}|\cos\theta
+}
+\]
+
+\begin{lstlisting}
+// Producto punto
+double dot(Point a, Point b) {
+    return a.x * b.x + a.y * b.y;
+}
+
+// Angulo entre dos vectores
+double angle(Point a, Point b) {
+    return acos(dot(a, b) / (norm(a) * norm(b)));
+}
+
+// Verificar si dos vectores son perpendiculares
+bool isPerpendicular(Point a, Point b) {
+    return abs(dot(a, b)) < EPS;
+}
+\end{lstlisting}
+
+\subsection{Producto Cruz (Cross Product) en 2D}
+
+\[
+\boxed{
+\vec{u} \times \vec{v} = u_x \cdot v_y - u_y \cdot v_x
+}
+\]
+
+\textbf{Interpretación geométrica}:
+\begin{itemize}
+    \item \textbf{Positivo}: $v$ está a la izquierda de $u$ (giro antihorario)
+    \item \textbf{Negativo}: $v$ está a la derecha de $u$ (giro horario)
+    \item \textbf{Cero}: $u$ y $v$ son colineales
+    \item \textbf{Magnitud}: Área del paralelogramo formado por $u$ y $v$
+\end{itemize}
+
+\begin{lstlisting}
+// Producto cruz (devuelve escalar en 2D)
+double cross(Point a, Point b) {
+    return a.x * b.y - a.y * b.x;
+}
+
+// Producto cruz de tres puntos (b es el origen)
+double cross(Point a, Point b, Point c) {
+    return cross(a - b, c - b);
+}
+
+// Determinar orientacion de tres puntos
+// Retorna: +1 (izquierda/CCW), -1 (derecha/CW), 0 (colineal)
+int orientation(Point a, Point b, Point c) {
+    double val = cross(a, b, c);
+    if (abs(val) < EPS) return 0;
+    return (val > 0) ? 1 : -1;
+}
+
+// Area con signo de triangulo (positiva si CCW)
+double signedArea(Point a, Point b, Point c) {
+    return cross(a, b, c) / 2.0;
+}
+
+// Area de triangulo (siempre positiva)
+double triangleArea(Point a, Point b, Point c) {
+    return abs(signedArea(a, b, c));
+}
+\end{lstlisting}
+
+\subsection{Verificaciones Básicas}
+
+\begin{lstlisting}
+// Verificar si tres puntos son colineales
+bool collinear(Point a, Point b, Point c) {
+    return abs(cross(a, b, c)) < EPS;
+}
+
+// Verificar si dos vectores son paralelos
+bool parallel(Point a, Point b) {
+    return abs(cross(a, b)) < EPS;
+}
+
+// Punto medio
+Point midpoint(Point a, Point b) {
+    return (a + b) / 2.0;
+}
+
+// Interpolar entre dos puntos (t = 0 -> a, t = 1 -> b)
+Point lerp(Point a, Point b, double t) {
+    return a + (b - a) * t;
+}
+\end{lstlisting}
+
+\section{Líneas y Segmentos}
+
+\subsection{Estructura de Línea}
+
+\begin{lstlisting}
+struct Line {
+    Point a, b; // Dos puntos que definen la linea
+    
+    Line() {}
+    Line(Point a, Point b) : a(a), b(b) {}
+    
+    // Vector direccion
+    Point dir() const { return b - a; }
+    
+    // Vector perpendicular (normal)
+    Point perp() const { 
+        Point d = dir();
+        return Point(-d.y, d.x); 
+    }
+};
+
+// Forma Ax + By + C = 0
+struct LineEq {
+    double A, B, C;
+    
+    LineEq(Point p, Point q) {
+        A = p.y - q.y;
+        B = q.x - p.x;
+        C = p.x * q.y - q.x * p.y;
+    }
+    
+    LineEq(double A, double B, double C) : A(A), B(B), C(C) {}
+    
+    // Evaluar punto en la linea
+    double eval(Point p) {
+        return A * p.x + B * p.y + C;
+    }
+};
+\end{lstlisting}
+
+\subsection{Punto en Línea y Segmento}
+
+\begin{lstlisting}
+// Verificar si punto p esta en la linea definida por a-b
+bool onLine(Point p, Line l) {
+    return collinear(p, l.a, l.b);
+}
+
+// Verificar si punto p esta en el segmento a-b
+bool onSegment(Point p, Line seg) {
+    return collinear(p, seg.a, seg.b) &&
+           dot(p - seg.a, p - seg.b) < EPS;
+}
+
+// Verificar si p esta dentro del rectangulo definido por a y b
+bool inBox(Point p, Point a, Point b) {
+    return min(a.x, b.x) <= p.x + EPS && p.x <= max(a.x, b.x) + EPS &&
+           min(a.y, b.y) <= p.y + EPS && p.y <= max(a.y, b.y) + EPS;
+}
+\end{lstlisting}
+
+\subsection{Proyección y Reflexión}
+
+\begin{lstlisting}
+// Proyeccion de punto p sobre la linea l
+Point project(Point p, Line l) {
+    Point d = l.dir();
+    return l.a + d * dot(p - l.a, d) / dot(d, d);
+}
+
+// Reflexion de punto p sobre la linea l
+Point reflect(Point p, Line l) {
+    Point proj = project(p, l);
+    return proj * 2.0 - p;
+}
+
+// Punto mas cercano en el segmento a punto p
+Point closestPoint(Point p, Line seg) {
+    Point d = seg.dir();
+    double t = dot(p - seg.a, d) / dot(d, d);
+    t = max(0.0, min(1.0, t)); // Clamp to [0, 1]
+    return seg.a + d * t;
+}
+\end{lstlisting}
+
+\subsection{Distancias}
+
+\begin{lstlisting}
+// Distancia de punto a linea
+double distToLine(Point p, Line l) {
+    return abs(cross(p - l.a, l.dir())) / norm(l.dir());
+}
+
+// Distancia de punto a segmento
+double distToSegment(Point p, Line seg) {
+    return dist(p, closestPoint(p, seg));
+}
+
+// Distancia entre dos segmentos
+double segmentDistance(Line s1, Line s2) {
+    if (segmentIntersect(s1, s2)) return 0;
+    return min({distToSegment(s1.a, s2),
+                distToSegment(s1.b, s2),
+                distToSegment(s2.a, s1),
+                distToSegment(s2.b, s1)});
+}
+\end{lstlisting}
+
+\subsection{Intersección de Líneas}
+
+\begin{lstlisting}
+// Interseccion de dos lineas (no segmentos)
+// Retorna true si se intersectan, guarda el punto en p
+bool lineIntersection(Line l1, Line l2, Point& p) {
+    Point d1 = l1.dir(), d2 = l2.dir();
+    double det = cross(d1, d2);
+    
+    if (abs(det) < EPS) return false; // Paralelas
+    
+    double t = cross(l2.a - l1.a, d2) / det;
+    p = l1.a + d1 * t;
+    return true;
+}
+
+// Verificar si dos segmentos se intersectan
+bool segmentIntersect(Line s1, Line s2) {
+    int o1 = orientation(s1.a, s1.b, s2.a);
+    int o2 = orientation(s1.a, s1.b, s2.b);
+    int o3 = orientation(s2.a, s2.b, s1.a);
+    int o4 = orientation(s2.a, s2.b, s1.b);
+    
+    // Caso general
+    if (o1 != o2 && o3 != o4) return true;
+    
+    // Casos especiales (colineales)
+    if (o1 == 0 && onSegment(s2.a, s1)) return true;
+    if (o2 == 0 && onSegment(s2.b, s1)) return true;
+    if (o3 == 0 && onSegment(s1.a, s2)) return true;
+    if (o4 == 0 && onSegment(s1.b, s2)) return true;
+    
+    return false;
+}
+
+// Punto de interseccion de dos segmentos
+bool segmentIntersection(Line s1, Line s2, Point& p) {
+    if (!segmentIntersect(s1, s2)) return false;
+    
+    Point d1 = s1.dir(), d2 = s2.dir();
+    double det = cross(d1, d2);
+    
+    if (abs(det) < EPS) { // Colineales
+        // Retornar un punto arbitrario
+        if (onSegment(s2.a, s1)) { p = s2.a; return true; }
+        if (onSegment(s2.b, s1)) { p = s2.b; return true; }
+        if (onSegment(s1.a, s2)) { p = s1.a; return true; }
+        return false;
+    }
+    
+    double t = cross(s2.a - s1.a, d2) / det;
+    p = s1.a + d1 * t;
+    return true;
+}
+\end{lstlisting}
+
+\section{Polígonos}
+
+\subsection{Representación}
+
+\begin{lstlisting}
+typedef vector<Point> Polygon;
+
+// Crear poligono desde n puntos
+Polygon makePolygon(vector<Point>& points) {
+    return Polygon(points.begin(), points.end());
+}
+\end{lstlisting}
+
+\subsection{Área de Polígono}
+
+\[
+\boxed{
+\text{Área} = \frac{1}{2}\left|\sum_{i=0}^{n-1}(x_i y_{i+1} - x_{i+1} y_i)\right|
+}
+\]
+
+\begin{lstlisting}
+// Area de poligono (con signo, positiva si CCW)
+double signedArea(const Polygon& poly) {
+    double area = 0;
+    int n = poly.size();
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        area += cross(poly[i], poly[j]);
+    }
+    return area / 2.0;
+}
+
+// Area de poligono (siempre positiva)
+double area(const Polygon& poly) {
+    return abs(signedArea(poly));
+}
+
+// Verificar si poligono es CCW
+bool isCCW(const Polygon& poly) {
+    return signedArea(poly) > 0;
+}
+\end{lstlisting}
+
+\subsection{Perímetro}
+
+\begin{lstlisting}
+double perimeter(const Polygon& poly) {
+    double perim = 0;
+    int n = poly.size();
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        perim += dist(poly[i], poly[j]);
+    }
+    return perim;
+}
+\end{lstlisting}
+
+\subsection{Punto Dentro de Polígono}
+
+\textbf{Algoritmo Ray Casting}: Trazar un rayo desde el punto hacia el infinito y contar intersecciones con los lados del polígono. Si es impar, está dentro.
+
+\begin{lstlisting}
+// Verificar si punto esta dentro del poligono
+// Complejidad: O(n)
+bool pointInPolygon(Point p, const Polygon& poly) {
+    int n = poly.size();
+    bool inside = false;
+    
+    for (int i = 0, j = n - 1; i < n; j = i++) {
+        if ((poly[i].y > p.y) != (poly[j].y > p.y) &&
+            p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / 
+                  (poly[j].y - poly[i].y) + poly[i].x) {
+            inside = !inside;
+        }
+    }
+    return inside;
+}
+
+// Version usando winding number (mas robusta)
+int windingNumber(Point p, const Polygon& poly) {
+    int wn = 0;
+    int n = poly.size();
+    
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        if (poly[i].y <= p.y) {
+            if (poly[j].y > p.y)
+                if (cross(poly[j] - poly[i], p - poly[i]) > 0)
+                    wn++;
+        } else {
+            if (poly[j].y <= p.y)
+                if (cross(poly[j] - poly[i], p - poly[i]) < 0)
+                    wn--;
+        }
+    }
+    return wn;
+}
+
+bool pointInPolygonWinding(Point p, const Polygon& poly) {
+    return windingNumber(p, poly) != 0;
+}
+\end{lstlisting}
+
+\subsection{Punto en Polígono Convexo}
+
+\begin{lstlisting}
+// Mas eficiente para poligonos convexos: O(log n) con busqueda binaria
+// O O(n) verificando que el punto este del mismo lado de todos los lados
+bool pointInConvexPolygon(Point p, const Polygon& poly) {
+    int n = poly.size();
+    int sign = 0;
+    
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        int o = orientation(poly[i], poly[j], p);
+        
+        if (o == 0) { // En el borde
+            if (onSegment(p, Line(poly[i], poly[j])))
+                return true;
+            continue;
+        }
+        
+        if (sign == 0) sign = o;
+        else if (sign != o) return false;
+    }
+    return true;
+}
+\end{lstlisting}
+
+\subsection{Centroide de Polígono}
+
+\[
+\boxed{
+C_x = \frac{1}{6A}\sum_{i=0}^{n-1}(x_i + x_{i+1})(x_i y_{i+1} - x_{i+1} y_i)
+}
+\]
+
+\begin{lstlisting}
+Point centroid(const Polygon& poly) {
+    Point c(0, 0);
+    double area = 0;
+    int n = poly.size();
+    
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        double cross_prod = cross(poly[i], poly[j]);
+        area += cross_prod;
+        c.x += (poly[i].x + poly[j].x) * cross_prod;
+        c.y += (poly[i].y + poly[j].y) * cross_prod;
+    }
+    
+    area /= 2.0;
+    c.x /= (6.0 * area);
+    c.y /= (6.0 * area);
+    return c;
+}
+\end{lstlisting}
+
+\section{Convex Hull (Envolvente Convexa)}
+
+\subsection{Algoritmo de Graham Scan}
+
+\textbf{Complejidad}: $O(n \log n)$
+
+\begin{lstlisting}
+// Ordenar puntos por angulo polar respecto al punto mas bajo
+Point pivot;
+
+bool polarCmp(const Point& a, const Point& b) {
+    int o = orientation(pivot, a, b);
+    if (o == 0) return dist2(pivot, a) < dist2(pivot, b);
+    return o > 0;
+}
+
+Polygon convexHullGraham(vector<Point> points) {
+    int n = points.size();
+    if (n < 3) return points;
+    
+    // Encontrar punto mas bajo (y mas a la izquierda en caso de empate)
+    int lowest = 0;
+    for (int i = 1; i < n; i++) {
+        if (points[i].y < points[lowest].y ||
+            (points[i].y == points[lowest].y && 
+             points[i].x < points[lowest].x)) {
+            lowest = i;
+        }
+    }
+    swap(points[0], points[lowest]);
+    pivot = points[0];
+    
+    // Ordenar por angulo polar
+    sort(points.begin() + 1, points.end(), polarCmp);
+    
+    // Construir convex hull
+    Polygon hull;
+    hull.push_back(points[0]);
+    hull.push_back(points[1]);
+    
+    for (int i = 2; i < n; i++) {
+        while (hull.size() > 1 && 
+               orientation(hull[hull.size()-2], 
+                         hull[hull.size()-1], 
+                         points[i]) <= 0) {
+            hull.pop_back();
+        }
+        hull.push_back(points[i]);
+    }
+    
+    return hull;
+}
+\end{lstlisting}
+
+\subsection{Algoritmo de Andrew (Monotone Chain)}
+
+\textbf{Complejidad}: $O(n \log n)$
+
+\begin{lstlisting}
+Polygon convexHullAndrew(vector<Point> points) {
+    int n = points.size();
+    if (n < 3) return points;
+    
+    sort(points.begin(), points.end());
+    
+    // Lower hull
+    Polygon lower;
+    for (int i = 0; i < n; i++) {
+        while (lower.size() >= 2 && 
+               orientation(lower[lower.size()-2],
+                         lower[lower.size()-1],
+                         points[i]) <= 0) {
+            lower.pop_back();
+        }
+        lower.push_back(points[i]);
+    }
+    
+    // Upper hull
+    Polygon upper;
+    for (int i = n - 1; i >= 0; i--) {
+        while (upper.size() >= 2 && 
+               orientation(upper[upper.size()-2],
+                         upper[upper.size()-1],
+                         points[i]) <= 0) {
+            upper.pop_back();
+        }
+        upper.push_back(points[i]);
+    }
+    
+    // Combinar (remover ultimo punto de cada mitad, duplicado)
+    lower.pop_back();
+    upper.pop_back();
+    lower.insert(lower.end(), upper.begin(), upper.end());
+    
+    return lower;
+}
+\end{lstlisting}
+
+\subsection{Jarvis March (Gift Wrapping)}
+
+\textbf{Complejidad}: $O(nh)$ donde $h$ es el número de puntos en el hull
+
+\begin{lstlisting}
+Polygon convexHullJarvis(vector<Point> points) {
+    int n = points.size();
+    if (n < 3) return points;
+    
+    // Encontrar punto mas a la izquierda
+    int leftmost = 0;
+    for (int i = 1; i < n; i++) {
+        if (points[i].x < points[leftmost].x)
+            leftmost = i;
+    }
+    
+    Polygon hull;
+    int p = leftmost;
+    
+    do {
+        hull.push_back(points[p]);
+        int q = (p + 1) % n;
+        
+        for (int i = 0; i < n; i++) {
+            if (orientation(points[p], points[i], points[q]) > 0)
+                q = i;
+        }
+        
+        p = q;
+    } while (p != leftmost);
+    
+    return hull;
+}
+\end{lstlisting}
+
+\section{Círculos}
+
+\subsection{Estructura de Círculo}
+
+\begin{lstlisting}
+struct Circle {
+    Point center;
+    double radius;
+    
+    Circle() : radius(0) {}
+    Circle(Point c, double r) : center(c), radius(r) {}
+    
+    // Area
+    double area() const {
+        return PI * radius * radius;
+    }
+    
+    // Perimetro
+    double circumference() const {
+        return 2 * PI * radius;
+    }
+    
+    // Verificar si contiene punto
+    bool contains(Point p) const {
+        return dist(center, p) <= radius + EPS;
+    }
+};
+\end{lstlisting}
+
+\subsection{Círculo por 3 Puntos}
+
+\begin{lstlisting}
+// Circuncentro de triangulo (centro del circulo circunscrito)
+Point circumcenter(Point a, Point b, Point c) {
+    Point mid1 = midpoint(a, b);
+    Point mid2 = midpoint(b, c);
+    
+    Point dir1 = rotate(b - a, PI / 2);
+    Point dir2 = rotate(c - b, PI / 2);
+    
+    Line l1(mid1, mid1 + dir1);
+    Line l2(mid2, mid2 + dir2);
+    
+    Point center;
+    lineIntersection(l1, l2, center);
+    return center;
+}
+
+Circle circumcircle(Point a, Point b, Point c) {
+    Point center = circumcenter(a, b, c);
+    return Circle(center, dist(center, a));
+}
+\end{lstlisting}
+
+\subsection{Círculo Inscrito en Triángulo}
+
+\begin{lstlisting}
+// Incentro de triangulo (centro del circulo inscrito)
+Point incenter(Point a, Point b, Point c) {
+    double la = dist(b, c);
+    double lb = dist(a, c);
+    double lc = dist(a, b);
+    double p = la + lb + lc;
+    
+    return Point(
+        (la * a.x + lb * b.x + lc * c.x) / p,
+        (la * a.y + lb * b.y + lc * c.y) / p
+    );
+}
+
+Circle incircle(Point a, Point b, Point c) {
+    Point center = incenter(a, b, c);
+    double s = (dist(a,b) + dist(b,c) + dist(c,a)) / 2.0;
+    double area = sqrt(s * (s - dist(a,b)) * 
+                      (s - dist(b,c)) * (s - dist(c,a)));
+    double radius = area / s;
+    return Circle(center, radius);
+}
+\end{lstlisting}
+
+\subsection{Intersección Círculo-Círculo}
+
+\begin{lstlisting}
+// Interseccion de dos circulos
+// Retorna: 0 (no se tocan), 1 (tangentes), 2 (se intersectan)
+int circleCircleIntersection(Circle c1, Circle c2, 
+                             Point& p1, Point& p2) {
+    double d = dist(c1.center, c2.center);
+    
+    // No se intersectan
+    if (d > c1.radius + c2.radius + EPS) return 0;
+    // Uno contiene al otro
+    if (d < abs(c1.radius - c2.radius) - EPS) return 0;
+    
+    // Tangentes
+    if (abs(d - (c1.radius + c2.radius)) < EPS ||
+        abs(d - abs(c1.radius - c2.radius)) < EPS) {
+        Point dir = unit(c2.center - c1.center);
+        p1 = c1.center + dir * c1.radius;
+        return 1;
+    }
+    
+    // Dos puntos de interseccion
+    double a = (c1.radius * c1.radius - 
+                c2.radius * c2.radius + d * d) / (2 * d);
+    double h = sqrt(c1.radius * c1.radius - a * a);
+    
+    Point mid = c1.center + (c2.center - c1.center) * (a / d);
+    Point perp = rotate(c2.center - c1.center, PI / 2);
+    perp = unit(perp) * h;
+    
+    p1 = mid + perp;
+    p2 = mid - perp;
+    return 2;
+}
+\end{lstlisting}
+
+\subsection{Intersección Círculo-Línea}
+
+\begin{lstlisting}
+// Interseccion circulo-linea
+int circleLineIntersection(Circle c, Line l, 
+                          Point& p1, Point& p2) {
+    Point closest = project(c.center, l);
+    double d = dist(c.center, closest);
+    
+    if (d > c.radius + EPS) return 0; // No intersectan
+    
+    if (abs(d - c.radius) < EPS) { // Tangente
+        p1 = closest;
+        return 1;
+    }
+    
+    // Dos puntos
+    double h = sqrt(c.radius * c.radius - d * d);
+    Point dir = unit(l.dir());
+    p1 = closest + dir * h;
+    p2 = closest - dir * h;
+    return 2;
+}
+\end{lstlisting}
+
+\subsection{Tangentes a un Círculo desde un Punto}
+
+\begin{lstlisting}
+// Tangentes desde punto externo a circulo
+vector<Point> tangentsFromPoint(Circle c, Point p) {
+    double d = dist(c.center, p);
+    if (d < c.radius - EPS) return {}; // Punto dentro
+    
+    if (abs(d - c.radius) < EPS) { // Punto en el circulo
+        return {p};
+    }
+    
+    double angle = asin(c.radius / d);
+    Point dir = unit(p - c.center);
+    
+    Point t1 = c.center + rotate(dir, angle) * c.radius;
+    Point t2 = c.center + rotate(dir, -angle) * c.radius;
+    
+    return {t1, t2};
+}
+\end{lstlisting}
+
+\section{Geometría de Triángulos}
+
+\subsection{Tipos de Triángulos}
+
+\begin{lstlisting}
+// Verificar si es triangulo valido
+bool isValidTriangle(double a, double b, double c) {
+    return a + b > c && b + c > a && c + a > b;
+}
+
+// Tipo de triangulo por angulos
+enum TriangleType { ACUTE, RIGHT, OBTUSE };
+
+TriangleType triangleType(double a, double b, double c) {
+    double sides[3] = {a, b, c};
+    sort(sides, sides + 3);
+    
+    double a2 = sides[0] * sides[0];
+    double b2 = sides[1] * sides[1];
+    double c2 = sides[2] * sides[2];
+    
+    if (abs(a2 + b2 - c2) < EPS) return RIGHT;
+    if (a2 + b2 < c2) return OBTUSE;
+    return ACUTE;
+}
+\end{lstlisting}
+
+\subsection{Propiedades del Triángulo}
+
+\begin{lstlisting}
+// Semiperimetro
+double semiperimeter(double a, double b, double c) {
+    return (a + b + c) / 2.0;
+}
+
+// Area usando formula de Heron
+double heronArea(double a, double b, double c) {
+    double s = semiperimeter(a, b, c);
+    return sqrt(s * (s - a) * (s - b) * (s - c));
+}
+
+// Alturas
+double altitude(double base, double area) {
+    return 2.0 * area / base;
+}
+
+// Radio circunscrito
+double circumradius(double a, double b, double c) {
+    double area = heronArea(a, b, c);
+    return (a * b * c) / (4.0 * area);
+}
+
+// Radio inscrito
+double inradius(double a, double b, double c) {
+    double area = heronArea(a, b, c);
+    double s = semiperimeter(a, b, c);
+    return area / s;
+}
+\end{lstlisting}
+
+\section{Rotación de Calipers}
+
+\textbf{Técnica}: Para encontrar pares de puntos óptimos en polígonos convexos.
+
+\subsection{Diámetro de Polígono Convexo}
+
+Par de puntos más lejanos (antipodal pair).
+
+\begin{lstlisting}
+// Encontrar diametro de poligono convexo
+// Retorna par de indices
+pair<int, int> rotatingCalipers(const Polygon& hull) {
+    int n = hull.size();
+    if (n < 2) return {0, 0};
+    if (n == 2) return {0, 1};
+    
+    int k = 1;
+    while (triangleArea(hull[n-1], hull[0], hull[(k+1)%n]) > 
+           triangleArea(hull[n-1], hull[0], hull[k])) {
+        k++;
+    }
+    
+    double maxDist = 0;
+    pair<int, int> result = {0, k};
+    
+    for (int i = 0, j = k; i <= k && j < n; i++) {
+        double d = dist2(hull[i], hull[j]);
+        if (d > maxDist) {
+            maxDist = d;
+            result = {i, j};
+        }
+        
+        while (j < n - 1 && 
+               triangleArea(hull[i], hull[(i+1)%n], hull[(j+1)%n]) >
+               triangleArea(hull[i], hull[(i+1)%n], hull[j])) {
+            j++;
+            d = dist2(hull[i], hull[j]);
+            if (d > maxDist) {
+                maxDist = d;
+                result = {i, j};
+            }
+        }
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Ancho de Polígono Convexo}
+
+Distancia mínima entre lados paralelos.
+
+\begin{lstlisting}
+// Ancho minimo de poligono convexo
+double polygonWidth(const Polygon& hull) {
+    int n = hull.size();
+    double minWidth = 1e18;
+    
+    for (int i = 0, j = 1; i < n; i++) {
+        Point p1 = hull[i];
+        Point p2 = hull[(i + 1) % n];
+        Line edge(p1, p2);
+        
+        // Encontrar punto mas lejano del edge
+        while (distToLine(hull[(j+1)%n], edge) > 
+               distToLine(hull[j], edge)) {
+            j = (j + 1) % n;
+        }
+        
+        minWidth = min(minWidth, distToLine(hull[j], edge));
+    }
+    
+    return minWidth;
+}
+\end{lstlisting}
+
+\section{Operaciones con Polígonos}
+
+\subsection{Verificar Convexidad}
+
+\begin{lstlisting}
+bool isConvex(const Polygon& poly) {
+    int n = poly.size();
+    if (n < 3) return false;
+    
+    int sign = 0;
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        int k = (i + 2) % n;
+        
+        int o = orientation(poly[i], poly[j], poly[k]);
+        if (o != 0) {
+            if (sign == 0) sign = o;
+            else if (sign != o) return false;
+        }
+    }
+    return true;
+}
+\end{lstlisting}
+
+\subsection{Simplificación de Polígono (Douglas-Peucker)}
+
+\begin{lstlisting}
+// Algoritmo Douglas-Peucker para simplificar poligono
+void douglasPeucker(const Polygon& poly, double epsilon,
+                   int start, int end, vector<bool>& keep) {
+    if (end <= start + 1) return;
+    
+    Line seg(poly[start], poly[end]);
+    double maxDist = 0;
+    int maxIndex = start;
+    
+    for (int i = start + 1; i < end; i++) {
+        double d = distToLine(poly[i], seg);
+        if (d > maxDist) {
+            maxDist = d;
+            maxIndex = i;
+        }
+    }
+    
+    if (maxDist > epsilon) {
+        keep[maxIndex] = true;
+        douglasPeucker(poly, epsilon, start, maxIndex, keep);
+        douglasPeucker(poly, epsilon, maxIndex, end, keep);
+    }
+}
+
+Polygon simplifyPolygon(const Polygon& poly, double epsilon) {
+    int n = poly.size();
+    vector<bool> keep(n, false);
+    keep[0] = keep[n-1] = true;
+    
+    douglasPeucker(poly, epsilon, 0, n - 1, keep);
+    
+    Polygon result;
+    for (int i = 0; i < n; i++) {
+        if (keep[i]) result.push_back(poly[i]);
+    }
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Cortar Polígono por Línea}
+
+\begin{lstlisting}
+// Cortar poligono convexo por una linea
+// Retorna el lado izquierdo de la linea
+Polygon cutPolygon(const Polygon& poly, Line cutter) {
+    Polygon result;
+    int n = poly.size();
+    
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        int o1 = orientation(cutter.a, cutter.b, poly[i]);
+        int o2 = orientation(cutter.a, cutter.b, poly[j]);
+        
+        if (o1 >= 0) result.push_back(poly[i]);
+        
+        if (o1 * o2 < 0) {
+            Point inter;
+            lineIntersection(Line(poly[i], poly[j]), cutter, inter);
+            result.push_back(inter);
+        }
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\section{Par de Puntos Más Cercano}
+
+\subsection{Algoritmo Divide y Conquista}
+
+\textbf{Complejidad}: $O(n \log n)$
+
+\begin{lstlisting}
+double closestPairUtil(vector<Point>& px, vector<Point>& py,
+                      int left, int right) {
+    if (right - left <= 3) {
+        double minDist = 1e18;
+        for (int i = left; i < right; i++) {
+            for (int j = i + 1; j < right; j++) {
+                minDist = min(minDist, dist(px[i], px[j]));
+            }
+        }
+        return minDist;
+    }
+    
+    int mid = (left + right) / 2;
+    Point midPoint = px[mid];
+    
+    vector<Point> pyl, pyr;
+    for (const Point& p : py) {
+        if (p.x <= midPoint.x) pyl.push_back(p);
+        else pyr.push_back(p);
+    }
+    
+    double dl = closestPairUtil(px, pyl, left, mid);
+    double dr = closestPairUtil(px, pyr, mid, right);
+    double d = min(dl, dr);
+    
+    vector<Point> strip;
+    for (const Point& p : py) {
+        if (abs(p.x - midPoint.x) < d) {
+            strip.push_back(p);
+        }
+    }
+    
+    for (int i = 0; i < strip.size(); i++) {
+        for (int j = i + 1; 
+             j < strip.size() && (strip[j].y - strip[i].y) < d; 
+             j++) {
+            d = min(d, dist(strip[i], strip[j]));
+        }
+    }
+    
+    return d;
+}
+
+double closestPair(vector<Point> points) {
+    vector<Point> px = points, py = points;
+    sort(px.begin(), px.end(), 
+         [](const Point& a, const Point& b) { return a.x < b.x; });
+    sort(py.begin(), py.end(), 
+         [](const Point& a, const Point& b) { return a.y < b.y; });
+    
+    return closestPairUtil(px, py, 0, points.size());
+}
+\end{lstlisting}
+
+\section{Intersección y Unión de Polígonos}
+
+\subsection{Área de Intersección de Rectángulos}
+
+\begin{lstlisting}
+struct Rectangle {
+    double x1, y1, x2, y2; // (x1,y1) esquina inferior izq
+    
+    Rectangle(double x1, double y1, double x2, double y2)
+        : x1(x1), y1(y1), x2(x2), y2(y2) {}
+    
+    double area() const {
+        return (x2 - x1) * (y2 - y1);
+    }
+};
+
+double rectangleIntersectionArea(Rectangle r1, Rectangle r2) {
+    double x_overlap = max(0.0, 
+        min(r1.x2, r2.x2) - max(r1.x1, r2.x1));
+    double y_overlap = max(0.0, 
+        min(r1.y2, r2.y2) - max(r1.y1, r2.y1));
+    
+    return x_overlap * y_overlap;
+}
+
+double rectangleUnionArea(Rectangle r1, Rectangle r2) {
+    return r1.area() + r2.area() - 
+           rectangleIntersectionArea(r1, r2);
+}
+\end{lstlisting}
+
+\subsection{Área de Unión de Múltiples Rectángulos}
+
+\textbf{Sweep Line Algorithm}
+
+\begin{lstlisting}
+// Eventos para sweep line
+struct Event {
+    double x;
+    double y1, y2;
+    int type; // +1 para apertura, -1 para cierre
+    
+    bool operator<(const Event& e) const {
+        return x < e.x;
+    }
+};
+
+double multiRectangleUnionArea(vector<Rectangle>& rects) {
+    vector<Event> events;
+    
+    for (const auto& r : rects) {
+        events.push_back({r.x1, r.y1, r.y2, 1});
+        events.push_back({r.x2, r.y1, r.y2, -1});
+    }
+    
+    sort(events.begin(), events.end());
+    
+    double totalArea = 0;
+    double prevX = events[0].x;
+    
+    multiset<pair<double, int>> active; // (y, count)
+    
+    for (const Event& e : events) {
+        // Calcular altura cubierta
+        double height = 0;
+        double lastY = -1e18;
+        int count = 0;
+        
+        for (const auto& [y, c] : active) {
+            count += c;
+            if (count > 0 && lastY < y) {
+                height += y - max(lastY, -1e18);
+                lastY = y;
+            }
+        }
+        
+        totalArea += height * (e.x - prevX);
+        prevX = e.x;
+        
+        // Actualizar active set
+        active.insert({e.y1, e.type});
+        active.insert({e.y2, -e.type});
+    }
+    
+    return totalArea;
+}
+\end{lstlisting}
+
+\section{Pick's Theorem}
+
+\textbf{Teorema}: Para un polígono simple con vértices en puntos de coordenadas enteras:
+
+\[
+\boxed{
+\text{Área} = I + \frac{B}{2} - 1
+}
+\]
+
+donde $I$ = puntos interiores, $B$ = puntos en el borde
+
+\begin{lstlisting}
+// Contar puntos en el borde del poligono
+int boundaryPoints(const Polygon& poly) {
+    int count = 0;
+    int n = poly.size();
+    
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        int dx = abs((int)poly[j].x - (int)poly[i].x);
+        int dy = abs((int)poly[j].y - (int)poly[i].y);
+        count += __gcd(dx, dy);
+    }
+    
+    return count;
+}
+
+// Calcular puntos interiores usando Pick's theorem
+int interiorPoints(const Polygon& poly) {
+    double A = area(poly);
+    int B = boundaryPoints(poly);
+    return (int)(A - B / 2.0 + 1);
+}
+\end{lstlisting}
+
+\section{Búsqueda de Puntos}
+
+\subsection{KD-Tree para Búsqueda 2D}
+
+\begin{lstlisting}
+struct KDNode {
+    Point point;
+    KDNode *left, *right;
+    
+    KDNode(Point p) : point(p), left(nullptr), right(nullptr) {}
+};
+
+class KDTree {
+private:
+    KDNode* root;
+    
+    KDNode* buildTree(vector<Point>& points, int depth, 
+                     int left, int right) {
+        if (left > right) return nullptr;
+        
+        int axis = depth % 2; // 0 = x, 1 = y
+        int mid = (left + right) / 2;
+        
+        nth_element(points.begin() + left, 
+                   points.begin() + mid,
+                   points.begin() + right + 1,
+                   [axis](const Point& a, const Point& b) {
+                       return (axis == 0) ? a.x < b.x : a.y < b.y;
+                   });
+        
+        KDNode* node = new KDNode(points[mid]);
+        node->left = buildTree(points, depth + 1, left, mid - 1);
+        node->right = buildTree(points, depth + 1, mid + 1, right);
+        
+        return node;
+    }
+    
+    void nearestUtil(KDNode* node, Point target, int depth,
+                    Point& best, double& bestDist) {
+        if (!node) return;
+        
+        double d = dist(node->point, target);
+        if (d < bestDist) {
+            bestDist = d;
+            best = node->point;
+        }
+        
+        int axis = depth % 2;
+        double diff = (axis == 0) ? 
+            target.x - node->point.x : target.y - node->point.y;
+        
+        KDNode *first = (diff < 0) ? node->left : node->right;
+        KDNode *second = (diff < 0) ? node->right : node->left;
+        
+        nearestUtil(first, target, depth + 1, best, bestDist);
+        
+        if (diff * diff < bestDist)
+            nearestUtil(second, target, depth + 1, best, bestDist);
+    }
+    
+public:
+    KDTree(vector<Point>& points) {
+        root = buildTree(points, 0, 0, points.size() - 1);
+    }
+    
+    Point nearest(Point target) {
+        Point best = root->point;
+        double bestDist = 1e18;
+        nearestUtil(root, target, 0, best, bestDist);
+        return best;
+    }
+};
+\end{lstlisting}
+
+\section{Delaunay Triangulation y Voronoi Diagram}
+
+\subsection{Conceptos}
+
+\textbf{Delaunay Triangulation}: Triangulación donde ningún punto está dentro del círculo circunscrito de ningún triángulo.
+
+\textbf{Voronoi Diagram}: División del plano en regiones, cada una conteniendo todos los puntos más cercanos a un sitio dado.
+
+\textbf{Relación}: El diagrama de Voronoi es el dual de la triangulación de Delaunay.
+
+\subsection{Bowyer-Watson Algorithm (Delaunay)}
+
+\begin{lstlisting}
+struct Triangle {
+    Point a, b, c;
+    Circle circum;
+    
+    Triangle(Point a, Point b, Point c) : a(a), b(b), c(c) {
+        circum = circumcircle(a, b, c);
+    }
+    
+    bool containsVertex(Point p) {
+        return p == a || p == b || p == c;
+    }
+};
+
+vector<Triangle> delaunayTriangulation(vector<Point> points) {
+    // Crear super-triangulo que contiene todos los puntos
+    double minX = 1e18, minY = 1e18, maxX = -1e18, maxY = -1e18;
+    for (const Point& p : points) {
+        minX = min(minX, p.x); maxX = max(maxX, p.x);
+        minY = min(minY, p.y); maxY = max(maxY, p.y);
+    }
+    
+    double dx = maxX - minX, dy = maxY - minY;
+    Point p1(minX - dx, minY - 3 * dy);
+    Point p2(minX - dx, maxY + dy);
+    Point p3(maxX + 3 * dx, maxY + dy);
+    
+    vector<Triangle> triangles;
+    triangles.push_back(Triangle(p1, p2, p3));
+    
+    // Agregar puntos uno por uno
+    for (const Point& p : points) {
+        vector<Triangle> badTriangles;
+        
+        // Encontrar triangulos cuyo circuncentro contiene p
+        for (const Triangle& t : triangles) {
+            if (t.circum.contains(p)) {
+                badTriangles.push_back(t);
+            }
+        }
+        
+        // Encontrar el boundary del agujero poligonal
+        vector<Line> polygon;
+        for (const Triangle& t : badTriangles) {
+            Line edges[3] = {
+                Line(t.a, t.b), Line(t.b, t.c), Line(t.c, t.a)
+            };
+            
+            for (const Line& edge : edges) {
+                bool shared = false;
+                for (const Triangle& other : badTriangles) {
+                    if (t.a == other.a && t.b == other.b && 
+                        t.c == other.c) continue;
+                    
+                    if (other.containsVertex(edge.a) && 
+                        other.containsVertex(edge.b)) {
+                        shared = true;
+                        break;
+                    }
+                }
+                if (!shared) polygon.push_back(edge);
+            }
+        }
+        
+        // Remover bad triangles
+        triangles.erase(
+            remove_if(triangles.begin(), triangles.end(),
+                [&badTriangles](const Triangle& t) {
+                    return find_if(badTriangles.begin(), 
+                                  badTriangles.end(),
+                                  [&t](const Triangle& bad) {
+                                      return t.a == bad.a && 
+                                             t.b == bad.b && 
+                                             t.c == bad.c;
+                                  }) != badTriangles.end();
+                }),
+            triangles.end());
+        
+        // Crear nuevos triangulos
+        for (const Line& edge : polygon) {
+            triangles.push_back(Triangle(edge.a, edge.b, p));
+        }
+    }
+    
+    // Remover triangulos que comparten vertices con super-triangulo
+    triangles.erase(
+        remove_if(triangles.begin(), triangles.end(),
+            [p1, p2, p3](const Triangle& t) {
+                return t.containsVertex(p1) || 
+                       t.containsVertex(p2) || 
+                       t.containsVertex(p3);
+            }),
+        triangles.end());
+    
+    return triangles;
+}
+\end{lstlisting}
+
+\section{Técnicas Avanzadas}
+
+\subsection{Half-Plane Intersection}
+
+Intersección de semiplanos (útil para programación lineal en 2D).
+
+\begin{lstlisting}
+struct HalfPlane {
+    Point p, pq; // Punto y vector direccion
+    double angle;
+    
+    HalfPlane() {}
+    HalfPlane(Point a, Point b) : p(a), pq(b - a) {
+        angle = atan2(pq.y, pq.x);
+    }
+    
+    bool operator<(const HalfPlane& hp) const {
+        return angle < hp.angle;
+    }
+    
+    bool out(Point q) {
+        return cross(pq, q - p) < -EPS;
+    }
+    
+    Point intersect(HalfPlane hp) {
+        Point inter;
+        lineIntersection(Line(p, p + pq), 
+                        Line(hp.p, hp.p + hp.pq), inter);
+        return inter;
+    }
+};
+
+Polygon halfPlaneIntersection(vector<HalfPlane> hp) {
+    sort(hp.begin(), hp.end());
+    
+    deque<HalfPlane> dq;
+    deque<Point> points;
+    
+    for (int i = 0; i < hp.size(); i++) {
+        // Remover semiplanos con mismo angulo
+        if (i > 0 && abs(hp[i].angle - hp[i-1].angle) < EPS)
+            continue;
+        
+        // Pop back
+        while (points.size() > 0 && hp[i].out(points.back())) {
+            points.pop_back();
+            dq.pop_back();
+        }
+        
+        // Pop front
+        while (points.size() > 0 && hp[i].out(points.front())) {
+            points.pop_front();
+            dq.pop_front();
+        }
+        
+        if (!dq.empty()) {
+            points.push_back(dq.back().intersect(hp[i]));
+        }
+        
+        dq.push_back(hp[i]);
+    }
+    
+    // Final cleanup
+    while (points.size() > 0 && dq.front().out(points.back())) {
+        points.pop_back();
+        dq.pop_back();
+    }
+    
+    if (dq.size() < 3) return Polygon();
+    
+    points.push_back(dq.back().intersect(dq.front()));
+    
+    return Polygon(points.begin(), points.end());
+}
+\end{lstlisting}
+
+\subsection{Minkowski Sum}
+
+Suma de Minkowski de dos polígonos convexos.
+
+\[
+\boxed{
+P \oplus Q = \{p + q \mid p \in P, q \in Q\}
+}
+\]
+
+\begin{lstlisting}
+Polygon minkowskiSum(Polygon P, Polygon Q) {
+    // Asegurar que sean CCW
+    if (!isCCW(P)) reverse(P.begin(), P.end());
+    if (!isCCW(Q)) reverse(Q.begin(), Q.end());
+    
+    // Encontrar punto mas bajo
+    int pIdx = 0, qIdx = 0;
+    for (int i = 1; i < P.size(); i++)
+        if (P[i].y < P[pIdx].y) pIdx = i;
+    for (int i = 1; i < Q.size(); i++)
+        if (Q[i].y < Q[qIdx].y) qIdx = i;
+    
+    Polygon result;
+    int i = 0, j = 0;
+    int n = P.size(), m = Q.size();
+    
+    while (i < n || j < m) {
+        result.push_back(P[pIdx] + Q[qIdx]);
+        
+        Point e1 = P[(pIdx + 1) % n] - P[pIdx];
+        Point e2 = Q[(qIdx + 1) % m] - Q[qIdx];
+        
+        double crossProd = cross(e1, e2);
+        
+        if (i >= n) {
+            qIdx = (qIdx + 1) % m;
+            j++;
+        } else if (j >= m) {
+            pIdx = (pIdx + 1) % n;
+            i++;
+        } else if (crossProd > EPS) {
+            pIdx = (pIdx + 1) % n;
+            i++;
+        } else if (crossProd < -EPS) {
+            qIdx = (qIdx + 1) % m;
+            j++;
+        } else {
+            pIdx = (pIdx + 1) % n;
+            qIdx = (qIdx + 1) % m;
+            i++; j++;
+        }
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Punto en Polígono con Agujeros}
+
+\begin{lstlisting}
+bool pointInPolygonWithHoles(Point p, const Polygon& outer,
+                            const vector<Polygon>& holes) {
+    if (!pointInPolygon(p, outer)) return false;
+    
+    for (const Polygon& hole : holes) {
+        if (pointInPolygon(p, hole)) return false;
+    }
+    
+    return true;
+}
+\end{lstlisting}
+
+\section{Problemas Clásicos}
+
+\subsection{Art Gallery Problem}
+
+\textbf{Teorema}: $\lfloor n/3 \rfloor$ cámaras son suficientes y a veces necesarias para vigilar un polígono simple de $n$ vértices.
+
+\subsection{Closest Pair of Points on Convex Hull}
+
+\begin{lstlisting}
+pair<int, int> closestPairOnHull(const Polygon& hull) {
+    int n = hull.size();
+    double minDist = 1e18;
+    pair<int, int> result;
+    
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        double d = dist(hull[i], hull[j]);
+        if (d < minDist) {
+            minDist = d;
+            result = {i, j};
+        }
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Maximum Empty Circle}
+
+Círculo más grande que no contiene ningún punto de un conjunto.
+
+\begin{lstlisting}
+// Verificar si circulo esta vacio
+bool isEmptyCircle(Circle c, const vector<Point>& points) {
+    for (const Point& p : points) {
+        if (dist(c.center, p) < c.radius - EPS) return false;
+    }
+    return true;
+}
+
+// Encontrar circulo vacio maximo (fuerza bruta para pocos puntos)
+Circle maxEmptyCircle(vector<Point> points) {
+    Circle best(Point(0, 0), 0);
+    
+    // Probar circulos definidos por 2 puntos
+    int n = points.size();
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            Point center = midpoint(points[i], points[j]);
+            double radius = dist(center, points[i]);
+            Circle c(center, radius);
+            
+            if (isEmptyCircle(c, points) && c.radius > best.radius) {
+                best = c;
+            }
+        }
+    }
+    
+    // Probar circulos definidos por 3 puntos
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            for (int k = j + 1; k < n; k++) {
+                Circle c = circumcircle(points[i], points[j], 
+                                       points[k]);
+                if (isEmptyCircle(c, points) && 
+                    c.radius > best.radius) {
+                    best = c;
+                }
+            }
+        }
+    }
+    
+    return best;
+}
+\end{lstlisting}
+
+\section{Geometría 3D}
+
+\subsection{Punto en 3D}
+
+\begin{lstlisting}
+struct Point3D {
+    double x, y, z;
+    
+    Point3D() : x(0), y(0), z(0) {}
+    Point3D(double x, double y, double z) : x(x), y(y), z(z) {}
+    
+    Point3D operator+(const Point3D& p) const {
+        return Point3D(x + p.x, y + p.y, z + p.z);
+    }
+    Point3D operator-(const Point3D& p) const {
+        return Point3D(x - p.x, y - p.y, z - p.z);
+    }
+    Point3D operator*(double t) const {
+        return Point3D(x * t, y * t, z * t);
+    }
+    Point3D operator/(double t) const {
+        return Point3D(x / t, y / t, z / t);
+    }
+    
+    bool operator==(const Point3D& p) const {
+        return abs(x - p.x) < EPS && abs(y - p.y) < EPS && 
+               abs(z - p.z) < EPS;
+    }
+};
+
+// Distancia entre dos puntos
+double dist3D(Point3D a, Point3D b) {
+    return sqrt((a.x-b.x)*(a.x-b.x) + 
+                (a.y-b.y)*(a.y-b.y) + 
+                (a.z-b.z)*(a.z-b.z));
+}
+
+// Magnitud de vector
+double norm3D(Point3D p) {
+    return sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+}
+
+// Vector unitario
+Point3D unit3D(Point3D p) {
+    return p / norm3D(p);
+}
+\end{lstlisting}
+
+\subsection{Producto Punto en 3D}
+
+\begin{lstlisting}
+double dot3D(Point3D a, Point3D b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+// Angulo entre vectores
+double angle3D(Point3D a, Point3D b) {
+    return acos(dot3D(a, b) / (norm3D(a) * norm3D(b)));
+}
+\end{lstlisting}
+
+\subsection{Producto Cruz en 3D}
+
+\begin{lstlisting}
+Point3D cross3D(Point3D a, Point3D b) {
+    return Point3D(
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x
+    );
+}
+
+// Area de triangulo en 3D
+double triangleArea3D(Point3D a, Point3D b, Point3D c) {
+    return norm3D(cross3D(b - a, c - a)) / 2.0;
+}
+\end{lstlisting}
+
+\subsection{Plano en 3D}
+
+\begin{lstlisting}
+struct Plane {
+    double A, B, C, D; // Ax + By + Cz + D = 0
+    
+    Plane(double A, double B, double C, double D) 
+        : A(A), B(B), C(C), D(D) {}
+    
+    // Plano desde 3 puntos
+    Plane(Point3D p1, Point3D p2, Point3D p3) {
+        Point3D normal = cross3D(p2 - p1, p3 - p1);
+        A = normal.x;
+        B = normal.y;
+        C = normal.z;
+        D = -(A * p1.x + B * p1.y + C * p1.z);
+    }
+    
+    Point3D normal() const {
+        return Point3D(A, B, C);
+    }
+    
+    double eval(Point3D p) const {
+        return A * p.x + B * p.y + C * p.z + D;
+    }
+};
+
+// Distancia de punto a plano
+double distToPlane(Point3D p, Plane plane) {
+    return abs(plane.eval(p)) / 
+           norm3D(plane.normal());
+}
+
+// Proyeccion de punto sobre plano
+Point3D projectOnPlane(Point3D p, Plane plane) {
+    Point3D n = unit3D(plane.normal());
+    double dist = plane.eval(p) / norm3D(plane.normal());
+    return p - n * dist;
+}
+\end{lstlisting}
+
+\subsection{Volumen de Tetraedro}
+
+\begin{lstlisting}
+double tetrahedronVolume(Point3D a, Point3D b, 
+                        Point3D c, Point3D d) {
+    return abs(dot3D(b - a, cross3D(c - a, d - a))) / 6.0;
+}
+\end{lstlisting}
+
+\subsection{Convex Hull 3D}
+
+\textbf{Gift Wrapping en 3D} - Complejidad: $O(n^2)$
+
+\begin{lstlisting}
+struct Face {
+    int a, b, c; // Indices de vertices
+    Point3D normal;
+};
+
+// Verificar si punto esta en el lado positivo de la cara
+bool aboveFace(const vector<Point3D>& points, Face f, int p) {
+    Point3D v1 = points[f.b] - points[f.a];
+    Point3D v2 = points[f.c] - points[f.a];
+    Point3D normal = cross3D(v1, v2);
+    return dot3D(normal, points[p] - points[f.a]) > EPS;
+}
+
+vector<Face> convexHull3D(vector<Point3D> points) {
+    int n = points.size();
+    if (n < 4) return {};
+    
+    vector<Face> hull;
+    vector<bool> used(n, false);
+    
+    // Encontrar 4 puntos no coplanares
+    Face initial;
+    initial.a = 0;
+    for (int i = 1; i < n; i++) {
+        if (dist3D(points[0], points[i]) > EPS) {
+            initial.b = i;
+            break;
+        }
+    }
+    
+    for (int i = 0; i < n; i++) {
+        Point3D v1 = points[initial.b] - points[initial.a];
+        Point3D v2 = points[i] - points[initial.a];
+        if (norm3D(cross3D(v1, v2)) > EPS) {
+            initial.c = i;
+            break;
+        }
+    }
+    
+    hull.push_back(initial);
+    
+    // Algoritmo incremental simplificado
+    // (Version completa requiere mas manejo de casos borde)
+    
+    return hull;
+}
+\end{lstlisting}
+
+\section{Técnicas de Optimización}
+
+\subsection{Ternary Search para Funciones Unimodales}
+
+\begin{lstlisting}
+// Encontrar minimo de funcion unimodal
+double ternarySearch(function<double(double)> f, 
+                    double left, double right) {
+    while (right - left > EPS) {
+        double m1 = left + (right - left) / 3;
+        double m2 = right - (right - left) / 3;
+        
+        if (f(m1) > f(m2))
+            left = m1;
+        else
+            right = m2;
+    }
+    return (left + right) / 2;
+}
+
+// Ejemplo: Punto mas cercano en funcion parametrica
+Point closestPointOnCurve(function<Point(double)> curve,
+                         Point target, double tMin, double tMax) {
+    auto dist = [&](double t) {
+        return dist(curve(t), target);
+    };
+    
+    double bestT = ternarySearch(dist, tMin, tMax);
+    return curve(bestT);
+}
+\end{lstlisting}
+
+\subsection{Optimización 2D con Ternary Search}
+
+\begin{lstlisting}
+// Encontrar minimo de funcion 2D unimodal
+Point2D ternarySearch2D(function<double(Point)> f,
+                       double x1, double x2, 
+                       double y1, double y2) {
+    for (int iter = 0; iter < 100; iter++) {
+        double mx1 = x1 + (x2 - x1) / 3;
+        double mx2 = x2 - (x2 - x1) / 3;
+        
+        // Busqueda ternaria en y para cada x
+        auto fy1 = [&](double y) { return f(Point(mx1, y)); };
+        auto fy2 = [&](double y) { return f(Point(mx2, y)); };
+        
+        double best_y1 = ternarySearch(fy1, y1, y2);
+        double best_y2 = ternarySearch(fy2, y1, y2);
+        
+        if (f(Point(mx1, best_y1)) > f(Point(mx2, best_y2)))
+            x1 = mx1;
+        else
+            x2 = mx2;
+    }
+    
+    double bestX = (x1 + x2) / 2;
+    auto fy = [&](double y) { return f(Point(bestX, y)); };
+    double bestY = ternarySearch(fy, y1, y2);
+    
+    return Point(bestX, bestY);
+}
+\end{lstlisting}
+
+\section{Transformaciones Geométricas}
+
+\subsection{Matrix de Transformación 2D}
+
+\begin{lstlisting}
+struct Matrix2D {
+    double m[3][3];
+    
+    Matrix2D() {
+        memset(m, 0, sizeof(m));
+        m[2][2] = 1;
+    }
+    
+    static Matrix2D identity() {
+        Matrix2D mat;
+        mat.m[0][0] = mat.m[1][1] = mat.m[2][2] = 1;
+        return mat;
+    }
+    
+    static Matrix2D translation(double dx, double dy) {
+        Matrix2D mat = identity();
+        mat.m[0][2] = dx;
+        mat.m[1][2] = dy;
+        return mat;
+    }
+    
+    static Matrix2D rotation(double theta) {
+        Matrix2D mat = identity();
+        mat.m[0][0] = cos(theta);
+        mat.m[0][1] = -sin(theta);
+        mat.m[1][0] = sin(theta);
+        mat.m[1][1] = cos(theta);
+        return mat;
+    }
+    
+    static Matrix2D scaling(double sx, double sy) {
+        Matrix2D mat = identity();
+        mat.m[0][0] = sx;
+        mat.m[1][1] = sy;
+        return mat;
+    }
+    
+    Matrix2D operator*(const Matrix2D& other) const {
+        Matrix2D result;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                result.m[i][j] = 0;
+                for (int k = 0; k < 3; k++) {
+                    result.m[i][j] += m[i][k] * other.m[k][j];
+                }
+            }
+        }
+        return result;
+    }
+    
+    Point transform(Point p) const {
+        double x = m[0][0] * p.x + m[0][1] * p.y + m[0][2];
+        double y = m[1][0] * p.x + m[1][1] * p.y + m[1][2];
+        return Point(x, y);
+    }
+};
+\end{lstlisting}
+
+\subsection{Transformación Afín}
+
+\begin{lstlisting}
+// Transformacion afin: mapear triangulo ABC a XYZ
+Matrix2D affineTransform(Point A, Point B, Point C,
+                        Point X, Point Y, Point Z) {
+    // Resolver sistema de ecuaciones
+    double det = (B.x - A.x) * (C.y - A.y) - 
+                 (C.x - A.x) * (B.y - A.y);
+    
+    double a = ((X.x - A.x) * (C.y - A.y) - 
+                (C.x - A.x) * (X.y - A.y)) / det;
+    double b = ((B.x - A.x) * (X.y - A.y) - 
+                (X.x - A.x) * (B.y - A.y)) / det;
+    
+    Matrix2D mat;
+    // Implementacion simplificada
+    return mat;
+}
+\end{lstlisting}
+
+\section{Lattice Points (Puntos de Red)}
+
+\subsection{Contar Puntos Enteros en Segmento}
+
+\begin{lstlisting}
+// Numero de puntos enteros en segmento (sin contar extremos)
+int latticePointsInSegment(Point a, Point b) {
+    int dx = abs((int)b.x - (int)a.x);
+    int dy = abs((int)b.y - (int)a.y);
+    return __gcd(dx, dy) - 1;
+}
+
+// Numero total incluyendo extremos
+int totalLatticePoints(Point a, Point b) {
+    return latticePointsInSegment(a, b) + 2;
+}
+\end{lstlisting}
+
+\subsection{Contar Puntos Enteros en Triángulo}
+
+\begin{lstlisting}
+// Usando Pick's theorem
+int latticePointsInTriangle(Point a, Point b, Point c) {
+    // Puntos en el borde
+    int boundary = latticePointsInSegment(a, b) + 
+                   latticePointsInSegment(b, c) + 
+                   latticePointsInSegment(c, a) + 3;
+    
+    // Area
+    double A = triangleArea(a, b, c);
+    
+    // Pick's theorem: A = I + B/2 - 1
+    // I = A - B/2 + 1
+    int interior = (int)(A - boundary / 2.0 + 1);
+    
+    return interior + boundary;
+}
+\end{lstlisting}
+
+\section{Problemas de Geometría en Competencias}
+
+\subsection{Verificar si Rectángulos se Intersectan}
+
+\begin{lstlisting}
+bool rectanglesIntersect(Rectangle r1, Rectangle r2) {
+    return !(r1.x2 < r2.x1 || r2.x2 < r1.x1 ||
+             r1.y2 < r2.y1 || r2.y2 < r1.y1);
+}
+\end{lstlisting}
+
+\subsection{Línea de Visión (Line of Sight)}
+
+\begin{lstlisting}
+// Verificar si hay linea de vision entre dos puntos
+// sin obstrucciones de segmentos
+bool hasLineOfSight(Point a, Point b, vector<Line>& obstacles) {
+    Line sight(a, b);
+    
+    for (const Line& obs : obstacles) {
+        if (segmentIntersect(sight, obs)) {
+            Point inter;
+            if (segmentIntersection(sight, obs, inter)) {
+                // Verificar que no sea en los extremos
+                if (!(inter == a || inter == b)) {
+                    return false;
+                }
+            }
+        }
+    }
+    
+    return true;
+}
+\end{lstlisting}
+
+\subsection{Punto más Lejano en Polígono Convexo}
+
+\begin{lstlisting}
+// Punto del poligono mas lejano de un punto dado
+int farthestPoint(Point p, const Polygon& hull) {
+    int n = hull.size();
+    if (n == 1) return 0;
+    
+    // Busqueda ternaria
+    int left = 0, right = n;
+    
+    while (right - left > 2) {
+        int m1 = left + (right - left) / 3;
+        int m2 = right - (right - left) / 3;
+        
+        if (dist(p, hull[m1 % n]) < dist(p, hull[m2 % n]))
+            left = m1;
+        else
+            right = m2;
+    }
+    
+    int maxIdx = left;
+    double maxDist = dist(p, hull[left]);
+    
+    for (int i = left; i <= right; i++) {
+        double d = dist(p, hull[i % n]);
+        if (d > maxDist) {
+            maxDist = d;
+            maxIdx = i % n;
+        }
+    }
+    
+    return maxIdx;
+}
+\end{lstlisting}
+
+\subsection{Círculo Mínimo que Encierra Puntos (Welzl's Algorithm)}
+
+\begin{lstlisting}
+// Circulo minimo que contiene puntos
+Circle minCircleFrom2(Point a, Point b) {
+    return Circle(midpoint(a, b), dist(a, b) / 2.0);
+}
+
+Circle minCircleFrom3(Point a, Point b, Point c) {
+    return circumcircle(a, b, c);
+}
+
+Circle welzlHelper(vector<Point>& P, vector<Point> R, int n) {
+    if (n == 0 || R.size() == 3) {
+        if (R.size() == 0) return Circle(Point(0, 0), 0);
+        if (R.size() == 1) return Circle(R[0], 0);
+        if (R.size() == 2) return minCircleFrom2(R[0], R[1]);
+        return minCircleFrom3(R[0], R[1], R[2]);
+    }
+    
+    Point p = P[n - 1];
+    Circle c = welzlHelper(P, R, n - 1);
+    
+    if (c.contains(p)) return c;
+    
+    R.push_back(p);
+    return welzlHelper(P, R, n - 1);
+}
+
+Circle minEnclosingCircle(vector<Point> points) {
+    random_shuffle(points.begin(), points.end());
+    return welzlHelper(points, {}, points.size());
+}
+\end{lstlisting}
+
+\subsection{Máximo Rectángulo en Histograma}
+
+\begin{lstlisting}
+// Maximo rectangulo en histograma (util para problemas 2D)
+long long maxRectangleInHistogram(vector<int>& heights) {
+    stack<int> st;
+    long long maxArea = 0;
+    
+    for (int i = 0; i <= heights.size(); i++) {
+        int h = (i == heights.size()) ? 0 : heights[i];
+        
+        while (!st.empty() && heights[st.top()] > h) {
+            int height = heights[st.top()];
+            st.pop();
+            int width = st.empty() ? i : i - st.top() - 1;
+            maxArea = max(maxArea, (long long)height * width);
+        }
+        
+        st.push(i);
+    }
+    
+    return maxArea;
+}
+\end{lstlisting}
+
+\section{Fórmulas Útiles}
+
+\subsection{Distancias Especiales}
+
+\begin{lstlisting}
+// Distancia de Manhattan
+double manhattanDist(Point a, Point b) {
+    return abs(a.x - b.x) + abs(a.y - b.y);
+}
+
+// Distancia de Chebyshev
+double chebyshevDist(Point a, Point b) {
+    return max(abs(a.x - b.x), abs(a.y - b.y));
+}
+
+// Convertir Manhattan a Chebyshev y viceversa
+Point manhattanToChebyshev(Point p) {
+    return Point(p.x + p.y, p.x - p.y);
+}
+
+Point chebyshevToManhattan(Point p) {
+    return Point((p.x + p.y) / 2.0, (p.x - p.y) / 2.0);
+}
+\end{lstlisting}
+
+\subsection{Área con Shoelace Formula}
+
+\begin{lstlisting}
+// Formula del cordon de zapato (mas eficiente)
+double shoelaceArea(const vector<Point>& points) {
+    double area = 0;
+    int n = points.size();
+    
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        area += points[i].x * points[j].y;
+        area -= points[j].x * points[i].y;
+    }
+    
+    return abs(area) / 2.0;
+}
+\end{lstlisting}
+
+\subsection{Coordenadas Baricéntricas}
+
+\begin{lstlisting}
+// Coordenadas baricentricas de punto P en triangulo ABC
+struct Barycentric {
+    double alpha, beta, gamma;
+};
+
+Barycentric barycentricCoords(Point P, Point A, Point B, Point C) {
+    double areaABC = triangleArea(A, B, C);
+    double areaPBC = triangleArea(P, B, C);
+    double areaPCA = triangleArea(P, C, A);
+    double areaPAB = triangleArea(P, A, B);
+    
+    Barycentric coords;
+    coords.alpha = areaPBC / areaABC;
+    coords.beta = areaPCA / areaABC;
+    coords.gamma = areaPAB / areaABC;
+    
+    return coords;
+}
+
+// Verificar si punto esta en triangulo usando baricentricas
+bool pointInTriangleBary(Point P, Point A, Point B, Point C) {
+    Barycentric coords = barycentricCoords(P, A, B, C);
+    return coords.alpha >= -EPS && coords.beta >= -EPS && 
+           coords.gamma >= -EPS;
+}
+
+// Interpolar usando coordenadas baricentricas
+Point barycentricInterpolation(Barycentric coords,
+                               Point A, Point B, Point C) {
+    return Point(
+        coords.alpha * A.x + coords.beta * B.x + coords.gamma * C.x,
+        coords.alpha * A.y + coords.beta * B.y + coords.gamma * C.y
+    );
+}
+\end{lstlisting}
+
+\section{Tips y Trucos para Competencias}
+
+\subsection{Manejo de Precisión}
+
+\begin{lstlisting}
+// Comparacion con epsilon adaptativo
+bool eq(double a, double b) {
+    return abs(a - b) <= EPS * max(1.0, max(abs(a), abs(b)));
+}
+
+bool lt(double a, double b) {
+    return a < b - EPS * max(1.0, max(abs(a), abs(b)));
+}
+
+bool le(double a, double b) {
+    return a <= b + EPS * max(1.0, max(abs(a), abs(b)));
+}
+\end{lstlisting}
+
+\subsection{Verificaciones Rápidas}
+
+\begin{lstlisting}
+// Bounding box check antes de operaciones costosas
+bool boundingBoxesIntersect(Line s1, Line s2) {
+    return max(s1.a.x, s1.b.x) >= min(s2.a.x, s2.b.x) - EPS &&
+           max(s2.a.x, s2.b.x) >= min(s1.a.x, s1.b.x) - EPS &&
+           max(s1.a.y, s1.b.y) >= min(s2.a.y, s2.b.y) - EPS &&
+           max(s2.a.y, s2.b.y) >= min(s1.a.y, s1.b.y) - EPS;
+}
+
+// Segment intersect optimizado
+bool fastSegmentIntersect(Line s1, Line s2) {
+    if (!boundingBoxesIntersect(s1, s2)) return false;
+    return segmentIntersect(s1, s2);
+}
+\end{lstlisting}
+
+\subsection{Operaciones con Enteros Cuando es Posible}
+
+\begin{lstlisting}
+// Usar enteros para evitar errores de precision
+struct PointInt {
+    long long x, y;
+    
+    PointInt(long long x = 0, long long y = 0) : x(x), y(y) {}
+};
+
+long long crossInt(PointInt a, PointInt b) {
+    return a.x * b.y - a.y * b.x;
+}
+
+int orientationInt(PointInt a, PointInt b, PointInt c) {
+    long long val = crossInt(b - a, c - a);
+    if (val == 0) return 0;
+    return (val > 0) ? 1 : -1;
+}
+\end{lstlisting}
+
+\section{Algoritmos de Sweep Line Avanzados}
+
+\subsection{Intersección de Múltiples Segmentos (Bentley-Ottmann)}
+
+\begin{lstlisting}
+struct Event {
+    Point p;
+    int type; // 0: left, 1: intersection, 2: right
+    int segmentId;
+    
+    bool operator<(const Event& e) const {
+        if (abs(p.x - e.p.x) > EPS) return p.x < e.p.x;
+        return type < e.type;
+    }
+};
+
+// Algoritmo Bentley-Ottmann simplificado
+vector<Point> findAllIntersections(vector<Line>& segments) {
+    vector<Event> events;
+    int n = segments.size();
+    
+    // Crear eventos para cada extremo
+    for (int i = 0; i < n; i++) {
+        Point left = segments[i].a;
+        Point right = segments[i].b;
+        if (left.x > right.x) swap(left, right);
+        
+        events.push_back({left, 0, i});
+        events.push_back({right, 2, i});
+    }
+    
+    sort(events.begin(), events.end());
+    
+    set<int> active; // Segmentos activos
+    vector<Point> intersections;
+    
+    for (const Event& e : events) {
+        if (e.type == 0) {
+            // Verificar intersecciones con segmentos activos
+            for (int id : active) {
+                Point inter;
+                if (segmentIntersection(segments[e.segmentId], 
+                                       segments[id], inter)) {
+                    intersections.push_back(inter);
+                }
+            }
+            active.insert(e.segmentId);
+        } else if (e.type == 2) {
+            active.erase(e.segmentId);
+        }
+    }
+    
+    // Eliminar duplicados
+    sort(intersections.begin(), intersections.end(), 
+         [](Point a, Point b) {
+             if (abs(a.x - b.x) > EPS) return a.x < b.x;
+             return a.y < b.y;
+         });
+    
+    intersections.erase(
+        unique(intersections.begin(), intersections.end(),
+               [](Point a, Point b) { return a == b; }),
+        intersections.end()
+    );
+    
+    return intersections;
+}
+\end{lstlisting}
+
+\subsection{Área de Unión de Rectángulos (Sweep Line)}
+
+\begin{lstlisting}
+struct RectEvent {
+    double x;
+    double y1, y2;
+    int type; // +1: inicio, -1: fin
+    
+    bool operator<(const RectEvent& e) const {
+        return x < e.x;
+    }
+};
+
+double unionAreaRectangles(vector<Rectangle>& rects) {
+    vector<RectEvent> events;
+    
+    for (const Rectangle& r : rects) {
+        events.push_back({r.x1, r.y1, r.y2, 1});
+        events.push_back({r.x2, r.y1, r.y2, -1});
+    }
+    
+    sort(events.begin(), events.end());
+    
+    double totalArea = 0;
+    map<pair<double,double>, int> activeSegments;
+    
+    for (int i = 0; i < events.size(); i++) {
+        if (i > 0) {
+            double width = events[i].x - events[i-1].x;
+            
+            // Calcular altura total cubierta
+            vector<pair<double,double>> intervals;
+            for (auto& p : activeSegments) {
+                if (p.second > 0) {
+                    intervals.push_back(p.first);
+                }
+            }
+            
+            sort(intervals.begin(), intervals.end());
+            double height = 0;
+            double lastEnd = -1e9;
+            
+            for (auto& interval : intervals) {
+                double start = max(interval.first, lastEnd);
+                double end = interval.second;
+                if (end > start) {
+                    height += end - start;
+                    lastEnd = end;
+                }
+            }
+            
+            totalArea += width * height;
+        }
+        
+        activeSegments[{events[i].y1, events[i].y2}] += events[i].type;
+    }
+    
+    return totalArea;
+}
+\end{lstlisting}
+
+\subsection{Skyline Problem}
+
+\begin{lstlisting}
+struct Building {
+    int left, right, height;
+};
+
+vector<pair<int,int>> getSkyline(vector<Building>& buildings) {
+    vector<pair<int,int>> events; // {x, height} height<0 = start
+    
+    for (const Building& b : buildings) {
+        events.push_back({b.left, -b.height});
+        events.push_back({b.right, b.height});
+    }
+    
+    sort(events.begin(), events.end());
+    
+    vector<pair<int,int>> result;
+    multiset<int> heights = {0};
+    int prevMax = 0;
+    
+    for (int i = 0; i < events.size(); ) {
+        int currX = events[i].first;
+        
+        // Procesar todos los eventos en la misma coordenada x
+        while (i < events.size() && events[i].first == currX) {
+            if (events[i].second < 0) {
+                heights.insert(-events[i].second);
+            } else {
+                heights.erase(heights.find(events[i].second));
+            }
+            i++;
+        }
+        
+        int currMax = *heights.rbegin();
+        if (currMax != prevMax) {
+            result.push_back({currX, currMax});
+            prevMax = currMax;
+        }
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\section{Problemas Avanzados}
+
+\subsection{Farthest Pair en Conjunto de Puntos}
+
+\begin{lstlisting}
+// Par de puntos mas lejanos (usando convex hull)
+pair<Point, Point> farthestPair(vector<Point> points) {
+    Polygon hull = convexHull(points);
+    int n = hull.size();
+    
+    if (n == 1) return {hull[0], hull[0]};
+    if (n == 2) return {hull[0], hull[1]};
+    
+    // Rotating calipers
+    int j = 1;
+    double maxDist = 0;
+    pair<Point, Point> result = {hull[0], hull[1]};
+    
+    for (int i = 0; i < n; i++) {
+        while (true) {
+            int next_j = (j + 1) % n;
+            Point v1 = hull[(i+1)%n] - hull[i];
+            Point v2 = hull[next_j] - hull[j];
+            
+            if (cross(v1, v2) > 0) {
+                j = next_j;
+            } else {
+                break;
+            }
+        }
+        
+        double d = dist(hull[i], hull[j]);
+        if (d > maxDist) {
+            maxDist = d;
+            result = {hull[i], hull[j]};
+        }
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Polígono de Visibilidad desde un Punto}
+
+\begin{lstlisting}
+// Poligono de visibilidad desde punto dentro de poligono simple
+Polygon visibilityPolygon(Point observer, Polygon& boundary) {
+    int n = boundary.size();
+    vector<pair<double, Point>> angles;
+    
+    // Obtener angulos de todos los vertices
+    for (int i = 0; i < n; i++) {
+        Point p = boundary[i];
+        double angle = atan2(p.y - observer.y, p.x - observer.x);
+        angles.push_back({angle, p});
+        
+        // Agregar puntos ligeramente antes y despues
+        angles.push_back({angle - EPS, p});
+        angles.push_back({angle + EPS, p});
+    }
+    
+    sort(angles.begin(), angles.end());
+    
+    Polygon visible;
+    for (auto& [angle, _] : angles) {
+        // Raycast en esta direccion
+        Point direction(cos(angle), sin(angle));
+        double minT = 1e9;
+        Point closest = observer + direction * minT;
+        
+        // Encontrar interseccion mas cercana
+        for (int i = 0; i < n; i++) {
+            Line edge(boundary[i], boundary[(i+1)%n]);
+            Point inter;
+            
+            Line ray(observer, observer + direction * 1000);
+            if (segmentIntersection(ray, edge, inter)) {
+                double t = dist(observer, inter);
+                if (t < minT && t > EPS) {
+                    minT = t;
+                    closest = inter;
+                }
+            }
+        }
+        
+        if (minT < 1e8) {
+            visible.push_back(closest);
+        }
+    }
+    
+    // Eliminar duplicados consecutivos
+    visible.erase(unique(visible.begin(), visible.end()), 
+                  visible.end());
+    
+    return visible;
+}
+\end{lstlisting}
+
+\subsection{Shortest Path Around Obstacles}
+
+\begin{lstlisting}
+// Camino mas corto evitando obstaculos poligonales
+double shortestPathAroundObstacles(Point start, Point end,
+                                   vector<Polygon>& obstacles) {
+    vector<Point> vertices = {start, end};
+    
+    // Agregar todos los vertices de obstaculos
+    for (const Polygon& poly : obstacles) {
+        for (const Point& p : poly) {
+            vertices.push_back(p);
+        }
+    }
+    
+    int n = vertices.size();
+    vector<vector<double>> dist(n, vector<double>(n, 1e9));
+    
+    // Construir grafo de visibilidad
+    for (int i = 0; i < n; i++) {
+        dist[i][i] = 0;
+        for (int j = i + 1; j < n; j++) {
+            Line sight(vertices[i], vertices[j]);
+            bool visible = true;
+            
+            // Verificar si la linea intersecta algun obstaculo
+            for (const Polygon& poly : obstacles) {
+                for (int k = 0; k < poly.size(); k++) {
+                    Line edge(poly[k], poly[(k+1)%poly.size()]);
+                    if (segmentIntersect(sight, edge)) {
+                        visible = false;
+                        break;
+                    }
+                }
+                if (!visible) break;
+            }
+            
+            if (visible) {
+                double d = dist(vertices[i], vertices[j]);
+                dist[i][j] = dist[j][i] = d;
+            }
+        }
+    }
+    
+    // Dijkstra desde start (vertice 0) hasta end (vertice 1)
+    vector<double> minDist(n, 1e9);
+    vector<bool> visited(n, false);
+    minDist[0] = 0;
+    
+    for (int iter = 0; iter < n; iter++) {
+        int u = -1;
+        for (int i = 0; i < n; i++) {
+            if (!visited[i] && (u == -1 || minDist[i] < minDist[u])) {
+                u = i;
+            }
+        }
+        
+        if (minDist[u] >= 1e9) break;
+        visited[u] = true;
+        
+        for (int v = 0; v < n; v++) {
+            if (dist[u][v] < 1e9) {
+                minDist[v] = min(minDist[v], minDist[u] + dist[u][v]);
+            }
+        }
+    }
+    
+    return minDist[1];
+}
+\end{lstlisting}
+
+\section{Geometría Computacional con Precision Entera}
+
+\subsection{Determinante 2x2 con Enteros}
+
+\begin{lstlisting}
+struct PointLL {
+    long long x, y;
+    
+    PointLL(long long x = 0, long long y = 0) : x(x), y(y) {}
+    
+    PointLL operator+(const PointLL& p) const {
+        return PointLL(x + p.x, y + p.y);
+    }
+    PointLL operator-(const PointLL& p) const {
+        return PointLL(x - p.x, y - p.y);
+    }
+    
+    bool operator==(const PointLL& p) const {
+        return x == p.x && y == p.y;
+    }
+    bool operator<(const PointLL& p) const {
+        return x < p.x || (x == p.x && y < p.y);
+    }
+};
+
+long long crossLL(PointLL a, PointLL b) {
+    return a.x * b.y - a.y * b.x;
+}
+
+long long dotLL(PointLL a, PointLL b) {
+    return a.x * b.x + a.y * b.y;
+}
+
+// Area de poligono multiplicada por 2 (para mantener enteros)
+long long doubleArea(vector<PointLL>& poly) {
+    long long area = 0;
+    int n = poly.size();
+    for (int i = 0; i < n; i++) {
+        int j = (i + 1) % n;
+        area += crossLL(poly[i], poly[j]);
+    }
+    return abs(area);
+}
+\end{lstlisting}
+
+\subsection{Convex Hull con Enteros}
+
+\begin{lstlisting}
+vector<PointLL> convexHullLL(vector<PointLL> points) {
+    sort(points.begin(), points.end());
+    points.erase(unique(points.begin(), points.end()), points.end());
+    
+    if (points.size() <= 1) return points;
+    
+    vector<PointLL> lower, upper;
+    
+    for (const PointLL& p : points) {
+        while (lower.size() >= 2) {
+            PointLL a = lower[lower.size()-2];
+            PointLL b = lower[lower.size()-1];
+            if (crossLL(b - a, p - a) <= 0) {
+                lower.pop_back();
+            } else {
+                break;
+            }
+        }
+        lower.push_back(p);
+    }
+    
+    for (int i = points.size()-1; i >= 0; i--) {
+        PointLL p = points[i];
+        while (upper.size() >= 2) {
+            PointLL a = upper[upper.size()-2];
+            PointLL b = upper[upper.size()-1];
+            if (crossLL(b - a, p - a) <= 0) {
+                upper.pop_back();
+            } else {
+                break;
+            }
+        }
+        upper.push_back(p);
+    }
+    
+    lower.pop_back();
+    upper.pop_back();
+    lower.insert(lower.end(), upper.begin(), upper.end());
+    
+    return lower;
+}
+\end{lstlisting}
+
+\section{Técnicas de Discretización}
+
+\subsection{Compresión de Coordenadas}
+
+\begin{lstlisting}
+// Comprimir coordenadas para trabajar con rangos grandes
+map<double, int> compressCoordinates(vector<double>& coords) {
+    vector<double> sorted = coords;
+    sort(sorted.begin(), sorted.end());
+    sorted.erase(unique(sorted.begin(), sorted.end()), sorted.end());
+    
+    map<double, int> compressed;
+    for (int i = 0; i < sorted.size(); i++) {
+        compressed[sorted[i]] = i;
+    }
+    
+    return compressed;
+}
+
+// Ejemplo de uso con rectangulos
+void compressRectangles(vector<Rectangle>& rects) {
+    vector<double> xs, ys;
+    
+    for (const Rectangle& r : rects) {
+        xs.push_back(r.x1);
+        xs.push_back(r.x2);
+        ys.push_back(r.y1);
+        ys.push_back(r.y2);
+    }
+    
+    map<double, int> compX = compressCoordinates(xs);
+    map<double, int> compY = compressCoordinates(ys);
+    
+    // Ahora trabajar con coordenadas comprimidas
+    for (Rectangle& r : rects) {
+        int x1 = compX[r.x1];
+        int x2 = compX[r.x2];
+        int y1 = compY[r.y1];
+        int y2 = compY[r.y2];
+        // Usar coordenadas comprimidas...
+    }
+}
+\end{lstlisting}
+
+\subsection{Grid de Puntos para Búsquedas Eficientes}
+
+\begin{lstlisting}
+struct SpatialGrid {
+    map<pair<int,int>, vector<int>> grid;
+    vector<Point> points;
+    double cellSize;
+    
+    SpatialGrid(double cellSize) : cellSize(cellSize) {}
+    
+    pair<int,int> getCell(Point p) {
+        return {(int)floor(p.x / cellSize), 
+                (int)floor(p.y / cellSize)};
+    }
+    
+    void insert(Point p) {
+        int id = points.size();
+        points.push_back(p);
+        grid[getCell(p)].push_back(id);
+    }
+    
+    vector<int> queryRange(Point center, double radius) {
+        set<int> result;
+        
+        int cx = (int)floor(center.x / cellSize);
+        int cy = (int)floor(center.y / cellSize);
+        int range = (int)ceil(radius / cellSize);
+        
+        for (int dx = -range; dx <= range; dx++) {
+            for (int dy = -range; dy <= range; dy++) {
+                auto it = grid.find({cx + dx, cy + dy});
+                if (it != grid.end()) {
+                    for (int id : it->second) {
+                        if (dist(points[id], center) <= radius) {
+                            result.insert(id);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return vector<int>(result.begin(), result.end());
+    }
+};
+\end{lstlisting}
+
+\section{Problemas Clásicos Adicionales}
+
+\subsection{Maximum Perimeter Triangle}
+
+\begin{lstlisting}
+// Triangulo de perimetro maximo dados segmentos
+vector<double> maxPerimeterTriangle(vector<double> sides) {
+    sort(sides.begin(), sides.end(), greater<double>());
+    
+    for (int i = 0; i + 2 < sides.size(); i++) {
+        if (sides[i] < sides[i+1] + sides[i+2]) {
+            return {sides[i], sides[i+1], sides[i+2]};
+        }
+    }
+    
+    return {}; // No se puede formar triangulo
+}
+\end{lstlisting}
+
+\subsection{Point in Polygon with Winding Number}
+
+\begin{lstlisting}
+// Winding number algorithm (mas robusto que ray casting)
+int windingNumber(Point p, const Polygon& poly) {
+    int wn = 0;
+    int n = poly.size();
+    
+    for (int i = 0; i < n; i++) {
+        Point a = poly[i];
+        Point b = poly[(i + 1) % n];
+        
+        if (a.y <= p.y) {
+            if (b.y > p.y) {
+                if (cross(b - a, p - a) > 0) {
+                    wn++;
+                }
+            }
+        } else {
+            if (b.y <= p.y) {
+                if (cross(b - a, p - a) < 0) {
+                    wn--;
+                }
+            }
+        }
+    }
+    
+    return wn;
+}
+
+bool pointInPolygonWinding(Point p, const Polygon& poly) {
+    return windingNumber(p, poly) != 0;
+}
+\end{lstlisting}
+
+\subsection{Largest Empty Circle}
+
+\begin{lstlisting}
+// Circulo vacio mas grande dentro de poligono
+Circle largestEmptyCircleInPolygon(const Polygon& poly) {
+    // Voronoi diagram approach (simplificado)
+    // En competencias, usar aproximacion con sampling
+    
+    double minX = 1e9, maxX = -1e9;
+    double minY = 1e9, maxY = -1e9;
+    
+    for (const Point& p : poly) {
+        minX = min(minX, p.x);
+        maxX = max(maxX, p.x);
+        minY = min(minY, p.y);
+        maxY = max(maxY, p.y);
+    }
+    
+    Circle best(Point(0, 0), 0);
+    int samples = 100;
+    
+    for (int i = 0; i < samples; i++) {
+        for (int j = 0; j < samples; j++) {
+            double x = minX + (maxX - minX) * i / samples;
+            double y = minY + (maxY - minY) * j / samples;
+            Point candidate(x, y);
+            
+            if (!pointInPolygon(candidate, poly)) continue;
+            
+            // Distancia al borde mas cercano
+            double minDist = 1e9;
+            for (int k = 0; k < poly.size(); k++) {
+                Line edge(poly[k], poly[(k+1)%poly.size()]);
+                minDist = min(minDist, distToSegment(candidate, edge));
+            }
+            
+            if (minDist > best.r) {
+                best = Circle(candidate, minDist);
+            }
+        }
+    }
+    
+    return best;
+}
+\end{lstlisting}
+
+\subsection{Smallest Enclosing Rectangle (Rotating Calipers)}
+
+\begin{lstlisting}
+// Rectangulo mas pequeno que encierra conjunto de puntos
+double smallestEnclosingRectangle(vector<Point> points) {
+    Polygon hull = convexHull(points);
+    int n = hull.size();
+    
+    if (n <= 2) return 0;
+    
+    double minArea = 1e18;
+    
+    // Para cada arista del convex hull
+    for (int i = 0; i < n; i++) {
+        Point edge = hull[(i+1)%n] - hull[i];
+        double angle = atan2(edge.y, edge.x);
+        
+        // Rotar todos los puntos
+        double cosA = cos(-angle);
+        double sinA = sin(-angle);
+        
+        double minX = 1e9, maxX = -1e9;
+        double minY = 1e9, maxY = -1e9;
+        
+        for (const Point& p : hull) {
+            double rotX = p.x * cosA - p.y * sinA;
+            double rotY = p.x * sinA + p.y * cosA;
+            
+            minX = min(minX, rotX);
+            maxX = max(maxX, rotX);
+            minY = min(minY, rotY);
+            maxY = max(maxY, rotY);
+        }
+        
+        double area = (maxX - minX) * (maxY - minY);
+        minArea = min(minArea, area);
+    }
+    
+    return minArea;
+}
+\end{lstlisting}
+
+\section{Optimizaciones y Mejores Prácticas}
+
+\subsection{Fast Input/Output}
+
+\begin{lstlisting}
+// Fast I/O para geometria
+void fastIO() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cout << fixed << setprecision(10);
+}
+\end{lstlisting}
+
+\subsection{Template Completo para Competencias}
+
+\begin{lstlisting}
+#include <bits/stdc++.h>
+using namespace std;
+
+const double EPS = 1e-9;
+const double PI = acos(-1.0);
+
+struct Point {
+    double x, y;
+    Point(double x = 0, double y = 0) : x(x), y(y) {}
+    
+    Point operator+(Point p) { return Point(x+p.x, y+p.y); }
+    Point operator-(Point p) { return Point(x-p.x, y-p.y); }
+    Point operator*(double t) { return Point(x*t, y*t); }
+    Point operator/(double t) { return Point(x/t, y/t); }
+    
+    bool operator==(Point p) { 
+        return abs(x-p.x)<EPS && abs(y-p.y)<EPS; 
+    }
+    bool operator<(Point p) { 
+        return x<p.x-EPS || (abs(x-p.x)<EPS && y<p.y-EPS); 
+    }
+};
+
+double dot(Point a, Point b) { return a.x*b.x + a.y*b.y; }
+double cross(Point a, Point b) { return a.x*b.y - a.y*b.x; }
+double norm(Point p) { return sqrt(dot(p, p)); }
+double dist(Point a, Point b) { return norm(a - b); }
+
+int main() {
+    fastIO();
+    
+    // Tu codigo aqui
+    
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Debugging Tips}
+
+\begin{lstlisting}
+// Funciones de debug
+void printPoint(Point p, string name = "") {
+    cerr << name << "(" << p.x << ", " << p.y << ")" << endl;
+}
+
+void printPolygon(const Polygon& poly, string name = "") {
+    cerr << name << " [";
+    for (int i = 0; i < poly.size(); i++) {
+        cerr << "(" << poly[i].x << "," << poly[i].y << ")";
+        if (i + 1 < poly.size()) cerr << ", ";
+    }
+    cerr << "]" << endl;
+}
+
+void printCircle(Circle c, string name = "") {
+    cerr << name << " center=(" << c.c.x << "," << c.c.y 
+         << ") r=" << c.r << endl;
+}
+\end{lstlisting}
+
+\section{Problemas de Práctica Recomendados}
+
+\subsection{Por Dificultad}
+
+\textbf{Nivel Básico:}
+\begin{itemize}
+    \item SPOJ - INOUTEST (Point in Polygon)
+    \item Codeforces - 3A (Shortest Path)
+    \item UVa 11479 (Triangle Properties)
+    \item SPOJ - THREEDPAINT (3D Distance)
+\end{itemize}
+
+\textbf{Nivel Intermedio:}
+\begin{itemize}
+    \item Codeforces - 166B (Polygons)
+    \item SPOJ - BSHEEP (Convex Hull)
+    \item UVa 10256 (Separating Points)
+    \item Codeforces - 125E (Convex Hull + DP)
+    \item SPOJ - CLOSEST (Closest Pair)
+\end{itemize}
+
+\textbf{Nivel Avanzado:}
+\begin{itemize}
+    \item IOI - Aliens (Convex Hull Trick)
+    \item APIO - Mural (Geometry + Optimization)
+    \item Codeforces - 70D (Convex Hull Dynamic)
+    \item SPOJ - GEOMSWEEP (Sweep Line)
+    \item TopCoder - ConvexPolygons (Intersection)
+\end{itemize}
+
+\subsection{Por Tema}
+
+\textbf{Convex Hull:}
+\begin{itemize}
+    \item Kattis - convexhull
+    \item SPOJ - GRAHAMH
+    \item Codeforces - 189A
+\end{itemize}
+
+\textbf{Segment Intersection:}
+\begin{itemize}
+    \item SPOJ - SEGINTERSECT
+    \item Codeforces - 1C
+    \item UVa 378
+\end{itemize}
+
+\textbf{Closest Pair:}
+\begin{itemize}
+    \item SPOJ - CLOSEST
+    \item Codeforces - 429D
+\end{itemize}
+
+\textbf{Polygon Operations:}
+\begin{itemize}
+    \item SPOJ - POLYAREA
+    \item UVa 10060
+    \item Codeforces - 166B
+\end{itemize}
+
+\section{Recursos Adicionales}
+
+\subsection{Referencias}
+
+\begin{itemize}
+    \item \textbf{Competitive Programming 3} - Steven Halim
+    \item \textbf{Computational Geometry: Algorithms and Applications} - de Berg et al.
+    \item \textbf{cp-algorithms.com} - Comprehensive algorithms reference
+    \item \textbf{USACO Guide} - Geometry section
+    \item \textbf{Codeforces EDU} - Geometry course
+\end{itemize}
+
+\subsection{Complexity Cheat Sheet}
+
+\begin{center}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Algoritmo} & \textbf{Complejidad} \\
+\hline
+Point in Polygon (Ray Casting) & $O(n)$ \\
+Point in Polygon (Winding) & $O(n)$ \\
+Convex Hull (Graham Scan) & $O(n \log n)$ \\
+Convex Hull (Andrew) & $O(n \log n)$ \\
+Convex Hull (Jarvis March) & $O(nh)$ \\
+Closest Pair & $O(n \log n)$ \\
+Line Intersection & $O(1)$ \\
+Segment Intersection (all pairs) & $O(n^2)$ \\
+Bentley-Ottmann & $O((n+k) \log n)$ \\
+Rotating Calipers & $O(n)$ \\
+Polygon Area & $O(n)$ \\
+Circle Intersection & $O(1)$ \\
+Triangulation & $O(n \log n)$ \\
+Voronoi Diagram & $O(n \log n)$ \\
+Delaunay Triangulation & $O(n \log n)$ \\
+KD-Tree Construction & $O(n \log n)$ \\
+KD-Tree Query & $O(\sqrt{n} + k)$ \\
+Half-Plane Intersection & $O(n \log n)$ \\
+Minkowski Sum & $O(n + m)$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Fórmulas Rápidas}
+
+\begin{align*}
+\text{Área Triángulo:} \quad & A = \frac{1}{2}|cross(B-A, C-A)| \\
+\text{Distancia punto-línea:} \quad & d = \frac{|Ax_0 + By_0 + C|}{\sqrt{A^2 + B^2}} \\
+\text{Ángulo entre vectores:} \quad & \theta = \arccos\left(\frac{a \cdot b}{|a||b|}\right) \\
+\text{Pick's Theorem:} \quad & A = I + \frac{B}{2} - 1 \\
+\text{Shoelace Formula:} \quad & A = \frac{1}{2}\left|\sum_{i=0}^{n-1} (x_i y_{i+1} - x_{i+1} y_i)\right| \\
+\text{Heron's Formula:} \quad & A = \sqrt{s(s-a)(s-b)(s-c)} \\
+\end{align*}
+
+\vspace{1em}
+\begin{center}
+\rule{0.8\textwidth}{0.4pt}
+
+\textbf{¡Fin del Cheatsheet de Geometría Computacional!}
+
+\textit{Practica mucho y dominarás la geometría en competencias}
+
+\rule{0.8\textwidth}{0.4pt}
+\end{center}
+
+\end{document}
