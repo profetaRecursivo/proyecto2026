@@ -1,0 +1,3044 @@
+\documentclass[10pt]{article}
+
+% Paquetes necesarios
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multicol}
+\usepackage{enumitem}
+
+\pgfplotsset{compat=1.18}
+
+% Configuración de márgenes
+\geometry{a4paper, margin=0.75in}
+
+% Configuración de listings para C++
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    breaklines=true,
+    frame=single,
+    tabsize=4,
+    showstringspaces=false
+}
+
+\title{\textbf{Cheatsheet de Aritmética y Fórmulas} \\ 
+       \large Para Programación Competitiva}
+\author{Competitive Programming Reference}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este documento contiene una colección exhaustiva de fórmulas aritméticas, progresiones, sumatorias, identidades y algoritmos útiles para programación competitiva. Incluye implementaciones en C++ y ejemplos prácticos.
+\end{abstract}
+
+\tableofcontents
+
+\newpage
+
+\section{Progresiones y Secuencias}
+
+\subsection{Progresión Aritmética (PA)}
+
+Una progresión aritmética es una secuencia donde la diferencia entre términos consecutivos es constante.
+
+\textbf{Forma general:}
+\[
+a_n = a_1 + (n-1)d
+\]
+
+donde:
+\begin{itemize}
+    \item $a_1$ = primer término
+    \item $d$ = diferencia común
+    \item $n$ = posición del término
+\end{itemize}
+
+\textbf{Suma de los primeros $n$ términos:}
+\[
+\boxed{S_n = \frac{n}{2}(a_1 + a_n) = \frac{n}{2}(2a_1 + (n-1)d)}
+\]
+
+\textbf{Término general conociendo dos términos:}
+\[
+d = \frac{a_m - a_k}{m - k}
+\]
+
+\begin{lstlisting}
+// Progresion Aritmetica
+struct ArithmeticProgression {
+    long long a1, d; // primer termino y diferencia
+    
+    // n-esimo termino (1-indexed)
+    long long term(long long n) {
+        return a1 + (n - 1) * d;
+    }
+    
+    // Suma de primeros n terminos
+    long long sum(long long n) {
+        return n * (2 * a1 + (n - 1) * d) / 2;
+    }
+    
+    // Suma desde termino i hasta j (inclusive)
+    long long rangeSum(long long i, long long j) {
+        return sum(j) - sum(i - 1);
+    }
+    
+    // Encontrar cuantos terminos hay hasta llegar a valor x
+    long long countUntil(long long x) {
+        if ((x - a1) % d != 0) return -1; // No es termino
+        long long n = (x - a1) / d + 1;
+        return n >= 1 ? n : -1;
+    }
+};
+\end{lstlisting}
+
+\subsection{Progresión Geométrica (PG)}
+
+Una progresión geométrica es una secuencia donde el cociente entre términos consecutivos es constante.
+
+\textbf{Forma general:}
+\[
+a_n = a_1 \cdot r^{n-1}
+\]
+
+donde:
+\begin{itemize}
+    \item $a_1$ = primer término
+    \item $r$ = razón común
+    \item $n$ = posición del término
+\end{itemize}
+
+\textbf{Suma de los primeros $n$ términos:}
+\[
+\boxed{S_n = \begin{cases}
+a_1 \cdot \frac{r^n - 1}{r - 1} & \text{si } r \neq 1 \\
+n \cdot a_1 & \text{si } r = 1
+\end{cases}}
+\]
+
+\textbf{Suma infinita (si $|r| < 1$):}
+\[
+\boxed{S_\infty = \frac{a_1}{1 - r}}
+\]
+
+\begin{lstlisting}
+// Progresion Geometrica
+template<typename T>
+struct GeometricProgression {
+    T a1, r; // primer termino y razon
+    
+    // n-esimo termino
+    T term(int n) {
+        return a1 * pow(r, n - 1);
+    }
+    
+    // Suma de primeros n terminos
+    T sum(int n) {
+        if (abs(r - 1.0) < 1e-9) return n * a1;
+        return a1 * (pow(r, n) - 1) / (r - 1);
+    }
+    
+    // Suma infinita (solo si |r| < 1)
+    T infiniteSum() {
+        if (abs(r) >= 1) return -1; // No converge
+        return a1 / (1 - r);
+    }
+};
+
+// Version con exponenciacion binaria para enteros
+struct GeometricProgressionMod {
+    long long a1, r, mod;
+    
+    long long binpow(long long base, long long exp) {
+        long long res = 1;
+        base %= mod;
+        while (exp > 0) {
+            if (exp & 1) res = (res * base) % mod;
+            base = (base * base) % mod;
+            exp >>= 1;
+        }
+        return res;
+    }
+    
+    long long term(long long n) {
+        return (a1 * binpow(r, n - 1)) % mod;
+    }
+    
+    // Suma usando formula geometrica modular
+    long long sum(long long n) {
+        if (r == 1) return (n * a1) % mod;
+        
+        long long rn = binpow(r, n);
+        long long numerator = (a1 * (rn - 1 + mod)) % mod;
+        
+        // Necesitamos inverso modular de (r - 1)
+        long long denominator = (r - 1 + mod) % mod;
+        long long inv = binpow(denominator, mod - 2); // Si mod es primo
+        
+        return (numerator * inv) % mod;
+    }
+};
+\end{lstlisting}
+
+\subsection{Progresión Armónica}
+
+Una progresión armónica es una secuencia cuyos recíprocos forman una progresión aritmética.
+
+\textbf{Forma general:}
+\[
+\frac{1}{a_n} = \frac{1}{a_1} + (n-1)d
+\]
+
+\textbf{Serie armónica:}
+\[
+H_n = 1 + \frac{1}{2} + \frac{1}{3} + \cdots + \frac{1}{n} \approx \ln(n) + \gamma
+\]
+
+donde $\gamma \approx 0.5772$ es la constante de Euler-Mascheroni.
+
+\begin{lstlisting}
+// Serie Armonica
+double harmonicSum(int n) {
+    double sum = 0;
+    for (int i = 1; i <= n; i++) {
+        sum += 1.0 / i;
+    }
+    return sum;
+}
+
+// Aproximacion usando logaritmo
+double harmonicApprox(int n) {
+    const double EULER_GAMMA = 0.5772156649;
+    return log(n) + EULER_GAMMA;
+}
+
+// Serie armonica generalizada: sum(1/i^p)
+double generalizedHarmonic(int n, double p) {
+    double sum = 0;
+    for (int i = 1; i <= n; i++) {
+        sum += 1.0 / pow(i, p);
+    }
+    return sum;
+}
+\end{lstlisting}
+
+\subsection{Secuencia de Fibonacci}
+
+\textbf{Definición recursiva:}
+\[
+F_n = F_{n-1} + F_{n-2}, \quad F_0 = 0, \quad F_1 = 1
+\]
+
+\textbf{Fórmula de Binet (forma cerrada):}
+\[
+\boxed{F_n = \frac{\phi^n - \psi^n}{\sqrt{5}}}
+\]
+
+donde $\phi = \frac{1+\sqrt{5}}{2}$ (proporción áurea) y $\psi = \frac{1-\sqrt{5}}{2}$.
+
+\textbf{Propiedades importantes:}
+\begin{align*}
+F_{n+m} &= F_n F_{m+1} + F_{n-1} F_m \\
+F_{2n} &= F_n(2F_{n+1} - F_n) \\
+F_n^2 + F_{n+1}^2 &= F_{2n+1} \\
+\gcd(F_m, F_n) &= F_{\gcd(m,n)}
+\end{align*}
+
+\textbf{Suma de Fibonacci:}
+\[
+\sum_{i=0}^{n} F_i = F_{n+2} - 1
+\]
+
+\begin{lstlisting}
+// Fibonacci con matriz (O(log n))
+const long long MOD = 1e9 + 7;
+
+struct Matrix2x2 {
+    long long m[2][2];
+    
+    Matrix2x2() {
+        memset(m, 0, sizeof(m));
+    }
+    
+    Matrix2x2 operator*(const Matrix2x2& other) const {
+        Matrix2x2 res;
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                for (int k = 0; k < 2; k++) {
+                    res.m[i][j] = (res.m[i][j] + 
+                                   m[i][k] * other.m[k][j]) % MOD;
+                }
+            }
+        }
+        return res;
+    }
+};
+
+Matrix2x2 matpow(Matrix2x2 base, long long exp) {
+    Matrix2x2 res;
+    res.m[0][0] = res.m[1][1] = 1;
+    
+    while (exp > 0) {
+        if (exp & 1) res = res * base;
+        base = base * base;
+        exp >>= 1;
+    }
+    return res;
+}
+
+long long fibonacci(long long n) {
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+    
+    Matrix2x2 base;
+    base.m[0][0] = base.m[0][1] = base.m[1][0] = 1;
+    base.m[1][1] = 0;
+    
+    Matrix2x2 res = matpow(base, n - 1);
+    return res.m[0][0];
+}
+
+// Suma de primeros n fibonacci
+long long fibonacciSum(long long n) {
+    return (fibonacci(n + 2) - 1 + MOD) % MOD;
+}
+\end{lstlisting}
+
+\subsection{Números de Catalan}
+
+Los números de Catalan aparecen en muchos problemas combinatorios.
+
+\textbf{Fórmula:}
+\[
+\boxed{C_n = \frac{1}{n+1}\binom{2n}{n} = \frac{(2n)!}{(n+1)!n!}}
+\]
+
+\textbf{Recurrencia:}
+\[
+C_0 = 1, \quad C_{n+1} = \sum_{i=0}^{n} C_i C_{n-i}
+\]
+
+\textbf{Aplicaciones:}
+\begin{itemize}
+    \item Número de formas de triangular un polígono de $n+2$ lados
+    \item Número de árboles binarios con $n$ nodos
+    \item Número de formas válidas de colocar $n$ pares de paréntesis
+    \item Caminos en una cuadrícula que no cruzan la diagonal
+\end{itemize}
+
+\begin{lstlisting}
+// Numeros de Catalan
+vector<long long> catalan(int n, long long mod) {
+    vector<long long> C(n + 1);
+    C[0] = 1;
+    
+    for (int i = 1; i <= n; i++) {
+        C[i] = 0;
+        for (int j = 0; j < i; j++) {
+            C[i] = (C[i] + C[j] * C[i - 1 - j]) % mod;
+        }
+    }
+    
+    return C;
+}
+
+// Formula directa usando combinatoria
+long long catalanDirect(int n, long long mod) {
+    // C_n = (2n)! / ((n+1)! * n!)
+    // O equivalente: C_n = C(2n, n) / (n+1)
+    
+    vector<long long> fact(2*n + 1);
+    fact[0] = 1;
+    for (int i = 1; i <= 2*n; i++) {
+        fact[i] = (fact[i-1] * i) % mod;
+    }
+    
+    auto binpow = [&](long long a, long long b) {
+        long long res = 1;
+        while (b > 0) {
+            if (b & 1) res = (res * a) % mod;
+            a = (a * a) % mod;
+            b >>= 1;
+        }
+        return res;
+    };
+    
+    auto inv = [&](long long a) {
+        return binpow(a, mod - 2); // Si mod es primo
+    };
+    
+    long long num = fact[2*n];
+    long long den = (fact[n+1] * fact[n]) % mod;
+    
+    return (num * inv(den)) % mod;
+}
+\end{lstlisting}
+
+\section{Sumatorias Fundamentales}
+
+\subsection{Suma de Naturales}
+
+\[
+\boxed{\sum_{i=1}^{n} i = \frac{n(n+1)}{2}}
+\]
+
+\textbf{Derivación:} Sea $S = 1 + 2 + \cdots + n$. Escribiendo al revés:
+\begin{align*}
+S &= 1 + 2 + 3 + \cdots + n \\
+S &= n + (n-1) + (n-2) + \cdots + 1 \\
+2S &= (n+1) + (n+1) + \cdots + (n+1) = n(n+1)
+\end{align*}
+
+\begin{lstlisting}
+// Suma de 1 a n
+long long sumN(long long n) {
+    return n * (n + 1) / 2;
+}
+
+// Suma de a hasta b
+long long sumRange(long long a, long long b) {
+    return sumN(b) - sumN(a - 1);
+}
+
+// Inverso: dado S, encontrar n tal que 1+2+...+n = S
+long long inverseSumN(long long S) {
+    // n(n+1)/2 = S => n^2 + n - 2S = 0
+    // n = (-1 + sqrt(1 + 8S)) / 2
+    long long n = (-1 + sqrt(1 + 8*S)) / 2;
+    return n;
+}
+\end{lstlisting}
+
+\subsection{Suma de Cuadrados}
+
+\[
+\boxed{\sum_{i=1}^{n} i^2 = \frac{n(n+1)(2n+1)}{6}}
+\]
+
+\textbf{Demostración:} Usando $(k+1)^3 - k^3 = 3k^2 + 3k + 1$ y telescoping.
+
+\begin{lstlisting}
+// Suma de cuadrados
+long long sumSquares(long long n) {
+    return n * (n + 1) * (2 * n + 1) / 6;
+}
+
+// Con modulo
+long long sumSquaresMod(long long n, long long mod) {
+    n %= mod;
+    long long res = (n * (n + 1) % mod) * (2 * n + 1) % mod;
+    
+    // Dividir entre 6 (necesitamos inverso modular)
+    long long inv6 = binpow(6, mod - 2, mod);
+    return (res * inv6) % mod;
+}
+\end{lstlisting}
+
+\subsection{Suma de Cubos}
+
+\[
+\boxed{\sum_{i=1}^{n} i^3 = \left[\frac{n(n+1)}{2}\right]^2}
+\]
+
+¡Nota que la suma de cubos es el cuadrado de la suma de naturales!
+
+\begin{lstlisting}
+// Suma de cubos
+long long sumCubes(long long n) {
+    long long s = n * (n + 1) / 2;
+    return s * s;
+}
+\end{lstlisting}
+
+\subsection{Suma de Potencias k-ésimas}
+
+\textbf{Fórmulas de Faulhaber:}
+
+\begin{align*}
+\sum_{i=1}^{n} i^4 &= \frac{n(n+1)(2n+1)(3n^2+3n-1)}{30} \\
+\sum_{i=1}^{n} i^5 &= \frac{n^2(n+1)^2(2n^2+2n-1)}{12}
+\end{align*}
+
+\textbf{Polinomios de Bernoulli:} Para cualquier $k$, existe un polinomio de grado $k+1$ que da la suma.
+
+\begin{lstlisting}
+// Suma de potencias usando precalculo
+vector<long long> powerSum(int n, int k, long long mod) {
+    // Calcular suma de i^k para i de 1 a n
+    // usando programacion dinamica
+    
+    vector<vector<long long>> dp(n + 1, vector<long long>(k + 1));
+    
+    for (int i = 1; i <= n; i++) {
+        long long pow_i = 1;
+        for (int j = 0; j <= k; j++) {
+            dp[i][j] = (dp[i-1][j] + pow_i) % mod;
+            pow_i = (pow_i * i) % mod;
+        }
+    }
+    
+    return dp[n];
+}
+\end{lstlisting}
+
+\subsection{Suma de Productos Consecutivos}
+
+\[
+\boxed{\sum_{i=1}^{n} i(i+1) = \frac{n(n+1)(n+2)}{3}}
+\]
+
+\textbf{Generalización:}
+\[
+\sum_{i=1}^{n} i(i+1)(i+2)\cdots(i+k) = \frac{n(n+1)(n+2)\cdots(n+k+1)}{k+2}
+\]
+
+\begin{lstlisting}
+// Suma de productos consecutivos
+long long sumConsecutiveProducts(long long n, int k) {
+    long long product = 1;
+    for (int i = 0; i <= k + 1; i++) {
+        product *= (n + i);
+    }
+    return product / (k + 2);
+}
+\end{lstlisting}
+
+\section{Manipulación de Sumatorias}
+
+\subsection{Técnicas de Telescoping}
+
+Una sumatoria telescópica se colapsa cuando términos consecutivos se cancelan.
+
+\textbf{Ejemplo:}
+\[
+\sum_{i=1}^{n} \frac{1}{i(i+1)} = \sum_{i=1}^{n} \left(\frac{1}{i} - \frac{1}{i+1}\right) = 1 - \frac{1}{n+1} = \frac{n}{n+1}
+\]
+
+\textbf{Patrón general:}
+\[
+\sum_{i=a}^{b} (f(i) - f(i+1)) = f(a) - f(b+1)
+\]
+
+\begin{lstlisting}
+// Suma telescopica: 1/(i(i+1))
+double telescopicSum(int n) {
+    return (double)n / (n + 1);
+}
+
+// Suma: 1/(i(i+k)) usando fracciones parciales
+double telescopicSumK(int n, int k) {
+    double sum = 0;
+    for (int i = 1; i <= n; i++) {
+        sum += 1.0 / (i * (i + k));
+    }
+    return sum;
+}
+
+// Formula cerrada: (1/k) * (H_n+k - H_k)
+// donde H_n es el n-esimo numero armonico
+\end{lstlisting}
+
+\subsection{Cambio de Orden de Sumatorias}
+
+\textbf{Doble sumatoria:}
+\[
+\sum_{i=1}^{n} \sum_{j=1}^{i} f(i,j) = \sum_{j=1}^{n} \sum_{i=j}^{n} f(i,j)
+\]
+
+\textbf{Ejemplo:}
+\[
+\sum_{i=1}^{n} i^2 = \sum_{i=1}^{n} \sum_{j=1}^{i} (2j-1) = \sum_{j=1}^{n} (2j-1)(n-j+1)
+\]
+
+\subsection{Suma de Suma}
+
+\[
+\boxed{\sum_{i=1}^{n} \sum_{j=1}^{i} j = \sum_{i=1}^{n} \frac{i(i+1)}{2} = \frac{n(n+1)(n+2)}{6}}
+\]
+
+\begin{lstlisting}
+// Suma de suma: sum(sum(j for j in 1..i) for i in 1..n)
+long long sumOfSum(long long n) {
+    return n * (n + 1) * (n + 2) / 6;
+}
+
+// Generalizacion: suma k veces anidada
+long long nestedSum(long long n, int k) {
+    // C(n + k, k + 1)
+    long long result = 1;
+    for (int i = 0; i <= k; i++) {
+        result *= (n + k - i);
+        result /= (i + 1);
+    }
+    return result;
+}
+\end{lstlisting}
+
+\section{Fórmulas Combinatorias}
+
+\subsection{Coeficientes Binomiales}
+
+\[
+\boxed{\binom{n}{k} = \frac{n!}{k!(n-k)!} = \binom{n}{n-k}}
+\]
+
+\textbf{Identidades importantes:}
+\begin{align*}
+\binom{n}{k} &= \binom{n-1}{k-1} + \binom{n-1}{k} \quad \text{(Identidad de Pascal)} \\
+\sum_{k=0}^{n} \binom{n}{k} &= 2^n \\
+\sum_{k=0}^{n} (-1)^k \binom{n}{k} &= 0 \\
+\sum_{k=0}^{n} k\binom{n}{k} &= n \cdot 2^{n-1} \\
+\binom{n}{k} \binom{k}{r} &= \binom{n}{r} \binom{n-r}{k-r}
+\end{align*}
+
+\begin{lstlisting}
+// Coeficientes binomiales con DP (Triangulo de Pascal)
+vector<vector<long long>> binomialCoeffs(int n, long long mod) {
+    vector<vector<long long>> C(n + 1, vector<long long>(n + 1));
+    
+    for (int i = 0; i <= n; i++) {
+        C[i][0] = 1;
+        for (int j = 1; j <= i; j++) {
+            C[i][j] = (C[i-1][j-1] + C[i-1][j]) % mod;
+        }
+    }
+    
+    return C;
+}
+
+// Binomial individual optimizado
+long long binomial(int n, int k) {
+    if (k > n - k) k = n - k;
+    
+    long long result = 1;
+    for (int i = 0; i < k; i++) {
+        result *= (n - i);
+        result /= (i + 1);
+    }
+    
+    return result;
+}
+
+// Binomial con modulo usando factoriales precalculados
+struct BinomialMod {
+    vector<long long> fact, inv_fact;
+    long long mod;
+    
+    BinomialMod(int n, long long mod) : mod(mod) {
+        fact.resize(n + 1);
+        inv_fact.resize(n + 1);
+        
+        fact[0] = 1;
+        for (int i = 1; i <= n; i++) {
+            fact[i] = (fact[i-1] * i) % mod;
+        }
+        
+        inv_fact[n] = binpow(fact[n], mod - 2);
+        for (int i = n - 1; i >= 0; i--) {
+            inv_fact[i] = (inv_fact[i+1] * (i+1)) % mod;
+        }
+    }
+    
+    long long binpow(long long a, long long b) {
+        long long res = 1;
+        while (b > 0) {
+            if (b & 1) res = (res * a) % mod;
+            a = (a * a) % mod;
+            b >>= 1;
+        }
+        return res;
+    }
+    
+    long long C(int n, int k) {
+        if (k > n || k < 0) return 0;
+        return (fact[n] * inv_fact[k] % mod) * inv_fact[n-k] % mod;
+    }
+};
+\end{lstlisting}
+
+\subsection{Identidad de Vandermonde}
+
+\[
+\boxed{\binom{m+n}{r} = \sum_{k=0}^{r} \binom{m}{k}\binom{n}{r-k}}
+\]
+
+Esta identidad cuenta el número de formas de elegir $r$ elementos de dos conjuntos disjuntos.
+
+\subsection{Números de Stirling}
+
+\textbf{Stirling de primera especie} $s(n,k)$: número de permutaciones de $n$ elementos con $k$ ciclos.
+
+\textbf{Stirling de segunda especie} $S(n,k)$: número de formas de partir $n$ elementos en $k$ subconjuntos no vacíos.
+
+\textbf{Recurrencia:}
+\[
+S(n,k) = k \cdot S(n-1,k) + S(n-1,k-1)
+\]
+
+\begin{lstlisting}
+// Numeros de Stirling de segunda especie
+vector<vector<long long>> stirling2nd(int n, long long mod) {
+    vector<vector<long long>> S(n + 1, vector<long long>(n + 1));
+    
+    S[0][0] = 1;
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= i; j++) {
+            S[i][j] = (j * S[i-1][j] + S[i-1][j-1]) % mod;
+        }
+    }
+    
+    return S;
+}
+
+// Numero de Bell: B_n = sum(S(n,k) for k=0..n)
+// Numero de particiones de conjunto con n elementos
+long long bellNumber(int n, long long mod) {
+    auto S = stirling2nd(n, mod);
+    long long result = 0;
+    for (int k = 0; k <= n; k++) {
+        result = (result + S[n][k]) % mod;
+    }
+    return result;
+}
+\end{lstlisting}
+
+\section{Teoría de Números Básica}
+
+\subsection{Máximo Común Divisor (GCD)}
+
+\textbf{Algoritmo de Euclides:}
+\[
+\gcd(a, b) = \gcd(b, a \bmod b), \quad \gcd(a, 0) = a
+\]
+
+\textbf{Propiedades:}
+\begin{align*}
+\gcd(a, b) &= \gcd(|a|, |b|) \\
+\gcd(a, b) &= \gcd(a - b, b) \\
+\gcd(ka, kb) &= k \cdot \gcd(a, b) \\
+\gcd(a+kb, b) &= \gcd(a, b)
+\end{align*}
+
+\textbf{Identidad de Bézout:} Existen enteros $x, y$ tales que:
+\[
+ax + by = \gcd(a, b)
+\]
+
+\begin{lstlisting}
+// GCD basico
+long long gcd(long long a, long long b) {
+    return b == 0 ? a : gcd(b, a % b);
+}
+
+// GCD extendido (encuentra x, y tales que ax + by = gcd(a,b))
+long long extgcd(long long a, long long b, long long& x, long long& y) {
+    if (b == 0) {
+        x = 1;
+        y = 0;
+        return a;
+    }
+    
+    long long x1, y1;
+    long long d = extgcd(b, a % b, x1, y1);
+    x = y1;
+    y = x1 - (a / b) * y1;
+    return d;
+}
+
+// LCM usando GCD
+long long lcm(long long a, long long b) {
+    return a / gcd(a, b) * b; // Evita overflow
+}
+
+// GCD de un array
+long long gcd_array(vector<long long>& arr) {
+    long long result = arr[0];
+    for (int i = 1; i < arr.size(); i++) {
+        result = gcd(result, arr[i]);
+        if (result == 1) break;
+    }
+    return result;
+}
+
+// LCM de un array
+long long lcm_array(vector<long long>& arr) {
+    long long result = arr[0];
+    for (int i = 1; i < arr.size(); i++) {
+        result = lcm(result, arr[i]);
+    }
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Función de Euler (Totient)}
+
+La función $\phi(n)$ cuenta cuántos números menores o iguales a $n$ son coprimos con $n$.
+
+\textbf{Fórmula:}
+\[
+\boxed{\phi(n) = n \prod_{p|n} \left(1 - \frac{1}{p}\right)}
+\]
+
+donde el producto es sobre todos los primos $p$ que dividen a $n$.
+
+\textbf{Propiedades:}
+\begin{align*}
+\phi(p^k) &= p^{k-1}(p-1) \quad \text{(si $p$ es primo)} \\
+\phi(mn) &= \phi(m)\phi(n) \quad \text{(si $\gcd(m,n) = 1$)} \\
+\sum_{d|n} \phi(d) &= n \\
+\sum_{k=1}^{n} \gcd(k,n) &= \sum_{d|n} d \cdot \phi(n/d)
+\end{align*}
+
+\begin{lstlisting}
+// Phi de un numero
+long long phi(long long n) {
+    long long result = n;
+    
+    for (long long p = 2; p * p <= n; p++) {
+        if (n % p == 0) {
+            while (n % p == 0) n /= p;
+            result -= result / p;
+        }
+    }
+    
+    if (n > 1) result -= result / n;
+    
+    return result;
+}
+
+// Phi de 1 a n con criba
+vector<long long> phiSieve(int n) {
+    vector<long long> phi(n + 1);
+    for (int i = 0; i <= n; i++) phi[i] = i;
+    
+    for (int i = 2; i <= n; i++) {
+        if (phi[i] == i) { // i es primo
+            for (int j = i; j <= n; j += i) {
+                phi[j] -= phi[j] / i;
+            }
+        }
+    }
+    
+    return phi;
+}
+
+// Suma de phi(i) para i de 1 a n
+long long sumPhi(long long n) {
+    // Formula: sum(phi(i)) = (n(n+1))/2 + sum recursiva
+    // Para valores grandes, usar formula cerrada o memoization
+    long long result = 0;
+    for (long long i = 1; i <= n; i++) {
+        result += phi(i);
+    }
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Divisores}
+
+\textbf{Número de divisores:}
+
+Si $n = p_1^{a_1} p_2^{a_2} \cdots p_k^{a_k}$, entonces:
+\[
+\boxed{\tau(n) = (a_1 + 1)(a_2 + 1) \cdots (a_k + 1)}
+\]
+
+\textbf{Suma de divisores:}
+\[
+\boxed{\sigma(n) = \frac{p_1^{a_1+1}-1}{p_1-1} \cdot \frac{p_2^{a_2+1}-1}{p_2-1} \cdots \frac{p_k^{a_k+1}-1}{p_k-1}}
+\]
+
+\textbf{Propiedades:}
+\begin{align*}
+\sum_{d|n} d &= \sigma(n) \\
+\sum_{d|n} \frac{1}{d} &= \frac{\sigma(n)}{n} \\
+\sum_{d|n} \phi(d) &= n
+\end{align*}
+
+\begin{lstlisting}
+// Encontrar todos los divisores
+vector<long long> divisors(long long n) {
+    vector<long long> divs;
+    
+    for (long long i = 1; i * i <= n; i++) {
+        if (n % i == 0) {
+            divs.push_back(i);
+            if (i != n / i) {
+                divs.push_back(n / i);
+            }
+        }
+    }
+    
+    sort(divs.begin(), divs.end());
+    return divs;
+}
+
+// Numero de divisores
+int countDivisors(long long n) {
+    int count = 0;
+    for (long long i = 1; i * i <= n; i++) {
+        if (n % i == 0) {
+            count += (i * i == n) ? 1 : 2;
+        }
+    }
+    return count;
+}
+
+// Suma de divisores
+long long sumDivisors(long long n) {
+    long long sum = 0;
+    for (long long i = 1; i * i <= n; i++) {
+        if (n % i == 0) {
+            sum += i;
+            if (i != n / i) {
+                sum += n / i;
+            }
+        }
+    }
+    return sum;
+}
+
+// Criba para contar divisores de 1 a n
+vector<int> divisorsSieve(int n) {
+    vector<int> d(n + 1, 0);
+    
+    for (int i = 1; i <= n; i++) {
+        for (int j = i; j <= n; j += i) {
+            d[j]++;
+        }
+    }
+    
+    return d;
+}
+\end{lstlisting}
+
+\subsection{Exponenciación Modular}
+
+\textbf{Teorema de Fermat:} Si $p$ es primo y $\gcd(a, p) = 1$:
+\[
+a^{p-1} \equiv 1 \pmod{p}
+\]
+
+\textbf{Teorema de Euler:} Si $\gcd(a, n) = 1$:
+\[
+a^{\phi(n)} \equiv 1 \pmod{n}
+\]
+
+\textbf{Pequeño teorema de Fermat para inverso:}
+\[
+a^{-1} \equiv a^{p-2} \pmod{p} \quad \text{(si $p$ es primo)}
+\]
+
+\begin{lstlisting}
+// Exponenciacion binaria modular
+long long binpow(long long a, long long b, long long mod) {
+    long long res = 1;
+    a %= mod;
+    
+    while (b > 0) {
+        if (b & 1) res = (res * a) % mod;
+        a = (a * a) % mod;
+        b >>= 1;
+    }
+    
+    return res;
+}
+
+// Inverso modular (cuando mod es primo)
+long long modinv(long long a, long long mod) {
+    return binpow(a, mod - 2, mod);
+}
+
+// Inverso modular usando GCD extendido (funciona siempre)
+long long modinv_gcd(long long a, long long mod) {
+    long long x, y;
+    long long g = extgcd(a, mod, x, y);
+    
+    if (g != 1) return -1; // No existe inverso
+    
+    return (x % mod + mod) % mod;
+}
+
+// Division modular: (a / b) mod m
+long long moddiv(long long a, long long b, long long mod) {
+    return (a * modinv(b, mod)) % mod;
+}
+\end{lstlisting}
+
+\subsection{Números Primos}
+
+\textbf{Criba de Eratóstenes:} Encuentra todos los primos hasta $n$ en $O(n \log \log n)$.
+
+\textbf{Teorema de los números primos:}
+\[
+\pi(n) \approx \frac{n}{\ln n}
+\]
+
+donde $\pi(n)$ es el número de primos menores o iguales a $n$.
+
+\begin{lstlisting}
+// Criba de Eratostenes
+vector<bool> sieve(int n) {
+    vector<bool> is_prime(n + 1, true);
+    is_prime[0] = is_prime[1] = false;
+    
+    for (int i = 2; i * i <= n; i++) {
+        if (is_prime[i]) {
+            for (int j = i * i; j <= n; j += i) {
+                is_prime[j] = false;
+            }
+        }
+    }
+    
+    return is_prime;
+}
+
+// Obtener lista de primos
+vector<int> getPrimes(int n) {
+    vector<bool> is_prime = sieve(n);
+    vector<int> primes;
+    
+    for (int i = 2; i <= n; i++) {
+        if (is_prime[i]) primes.push_back(i);
+    }
+    
+    return primes;
+}
+
+// Test de primalidad basico
+bool isPrime(long long n) {
+    if (n < 2) return false;
+    if (n == 2) return true;
+    if (n % 2 == 0) return false;
+    
+    for (long long i = 3; i * i <= n; i += 2) {
+        if (n % i == 0) return false;
+    }
+    
+    return true;
+}
+
+// Factorizacion prima
+vector<pair<long long, int>> primeFactors(long long n) {
+    vector<pair<long long, int>> factors;
+    
+    for (long long p = 2; p * p <= n; p++) {
+        if (n % p == 0) {
+            int exp = 0;
+            while (n % p == 0) {
+                n /= p;
+                exp++;
+            }
+            factors.push_back({p, exp});
+        }
+    }
+    
+    if (n > 1) factors.push_back({n, 1});
+    
+    return factors;
+}
+\end{lstlisting}
+
+\section{Congruencias y Ecuaciones Diofánticas}
+
+\subsection{Congruencia Lineal}
+
+Resolver: $ax \equiv b \pmod{m}$
+
+\textbf{Solución:} Existe solución si y solo si $\gcd(a, m) | b$.
+
+Si $g = \gcd(a, m)$, hay exactamente $g$ soluciones módulo $m$.
+
+\begin{lstlisting}
+// Resolver ax ≡ b (mod m)
+vector<long long> solveLinearCongruence(long long a, long long b, 
+                                        long long m) {
+    long long g = gcd(a, m);
+    
+    if (b % g != 0) return {}; // No hay solucion
+    
+    // Reducir a a'x ≡ b' (mod m')
+    a /= g;
+    b /= g;
+    m /= g;
+    
+    long long x, y;
+    extgcd(a, m, x, y);
+    
+    x = (x * b % m + m) % m;
+    
+    // Las g soluciones son x, x + m, x + 2m, ..., x + (g-1)m
+    vector<long long> solutions;
+    long long original_m = m * g;
+    
+    for (int i = 0; i < g; i++) {
+        solutions.push_back((x + i * m) % original_m);
+    }
+    
+    return solutions;
+}
+\end{lstlisting}
+
+\subsection{Teorema Chino del Resto (CRT)}
+
+Sistema de congruencias:
+\begin{align*}
+x &\equiv a_1 \pmod{m_1} \\
+x &\equiv a_2 \pmod{m_2} \\
+&\vdots \\
+x &\equiv a_k \pmod{m_k}
+\end{align*}
+
+Si los $m_i$ son coprimos dos a dos, existe una única solución módulo $M = m_1 m_2 \cdots m_k$.
+
+\[
+\boxed{x = \sum_{i=1}^{k} a_i M_i y_i \pmod{M}}
+\]
+
+donde $M_i = M/m_i$ y $y_i$ es el inverso de $M_i$ módulo $m_i$.
+
+\begin{lstlisting}
+// Teorema Chino del Resto
+long long CRT(vector<long long>& a, vector<long long>& m) {
+    int n = a.size();
+    long long M = 1;
+    
+    for (int i = 0; i < n; i++) M *= m[i];
+    
+    long long x = 0;
+    for (int i = 0; i < n; i++) {
+        long long Mi = M / m[i];
+        long long yi = modinv_gcd(Mi, m[i]);
+        x = (x + a[i] * Mi % M * yi % M) % M;
+    }
+    
+    return (x + M) % M;
+}
+
+// CRT para dos ecuaciones
+pair<long long, long long> CRT_two(long long a1, long long m1,
+                                   long long a2, long long m2) {
+    // x ≡ a1 (mod m1), x ≡ a2 (mod m2)
+    long long x, y;
+    long long g = extgcd(m1, m2, x, y);
+    
+    if ((a2 - a1) % g != 0) return {-1, -1}; // No hay solucion
+    
+    long long lcm_m = m1 / g * m2;
+    long long solution = (a1 + m1 * ((a2 - a1) / g * x % (m2 / g))) % lcm_m;
+    
+    if (solution < 0) solution += lcm_m;
+    
+    return {solution, lcm_m};
+}
+\end{lstlisting}
+
+\subsection{Ecuación Diofántica Lineal}
+
+Resolver: $ax + by = c$
+
+\textbf{Solución:} Existe solución entera si y solo si $\gcd(a, b) | c$.
+
+\textbf{Solución general:}
+
+Si $(x_0, y_0)$ es una solución particular:
+\[
+\boxed{
+\begin{aligned}
+x &= x_0 + k\frac{b}{g} \\
+y &= y_0 - k\frac{a}{g}
+\end{aligned}
+\quad \text{para todo } k \in \mathbb{Z}
+}
+\]
+
+donde $g = \gcd(a, b)$.
+
+\begin{lstlisting}
+// Ecuacion diofantica: ax + by = c
+bool solveDiophantine(long long a, long long b, long long c,
+                     long long& x, long long& y) {
+    long long g = extgcd(abs(a), abs(b), x, y);
+    
+    if (c % g != 0) return false;
+    
+    x *= c / g;
+    y *= c / g;
+    
+    if (a < 0) x = -x;
+    if (b < 0) y = -y;
+    
+    return true;
+}
+
+// Encontrar solucion no negativa minima
+bool solveDiophantineNonNeg(long long a, long long b, long long c,
+                            long long& x, long long& y) {
+    if (!solveDiophantine(a, b, c, x, y)) return false;
+    
+    long long g = gcd(a, b);
+    a /= g; b /= g;
+    
+    // x = x0 + k*b, y = y0 - k*a
+    // Queremos x >= 0 y y >= 0
+    
+    // Para x >= 0: k >= -x0/b
+    // Para y >= 0: k <= y0/a
+    
+    long long k_min = (x >= 0) ? 0 : (-x + b - 1) / b;
+    long long k_max = (y >= 0) ? 0 : y / a;
+    
+    if (k_min > k_max) return false;
+    
+    x = x + k_min * b;
+    y = y - k_min * a;
+    
+    return true;
+}
+
+// Contar soluciones no negativas
+long long countDiophantineSolutions(long long a, long long b, long long c) {
+    long long x, y;
+    if (!solveDiophantine(a, b, c, x, y)) return 0;
+    
+    long long g = gcd(a, b);
+    a /= g; b /= g;
+    
+    // Necesitamos x >= 0 y y >= 0
+    long long k_min = (x >= 0) ? -(x / b) : (-x + b - 1) / b;
+    long long k_max = (y >= 0) ? y / a : -((-y + a - 1) / a);
+    
+    if (k_min > k_max) return 0;
+    
+    return k_max - k_min + 1;
+}
+\end{lstlisting}
+
+\section{Particiones de Números}
+
+\subsection{Particiones de Enteros}
+
+$p(n)$ = número de formas de escribir $n$ como suma de enteros positivos (sin orden).
+
+\textbf{Función generadora:}
+\[
+\sum_{n=0}^{\infty} p(n) x^n = \prod_{k=1}^{\infty} \frac{1}{1 - x^k}
+\]
+
+\textbf{Recurrencia de Euler:}
+\[
+p(n) = \sum_{k=1}^{\infty} (-1)^{k+1} \left[ p\left(n - \frac{k(3k-1)}{2}\right) + p\left(n - \frac{k(3k+1)}{2}\right) \right]
+\]
+
+\begin{lstlisting}
+// Numero de particiones usando programacion dinamica
+vector<long long> partitions(int n, long long mod) {
+    vector<long long> p(n + 1, 0);
+    p[0] = 1;
+    
+    for (int k = 1; k <= n; k++) {
+        for (int i = k; i <= n; i++) {
+            p[i] = (p[i] + p[i - k]) % mod;
+        }
+    }
+    
+    return p;
+}
+
+// Particiones con exactamente k partes
+vector<vector<long long>> partitionsK(int n, int k, long long mod) {
+    vector<vector<long long>> dp(n + 1, vector<long long>(k + 1, 0));
+    dp[0][0] = 1;
+    
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= min(i, k); j++) {
+            // Particion con minimo = 1
+            dp[i][j] = dp[i-1][j-1];
+            // Particiones donde cada parte >= 2
+            if (i >= j) {
+                dp[i][j] = (dp[i][j] + dp[i-j][j]) % mod;
+            }
+        }
+    }
+    
+    return dp;
+}
+
+// Particiones con partes distintas
+long long partitionsDistinct(int n, long long mod) {
+    vector<long long> dp(n + 1, 0);
+    dp[0] = 1;
+    
+    for (int k = 1; k <= n; k++) {
+        for (int i = n; i >= k; i--) {
+            dp[i] = (dp[i] + dp[i - k]) % mod;
+        }
+    }
+    
+    return dp[n];
+}
+\end{lstlisting}
+
+\subsection{Particiones de Conjuntos (Números de Bell)}
+
+Ya vistos anteriormente con los números de Stirling de segunda especie.
+
+\textbf{Fórmula de Dobinski:}
+\[
+B_n = \frac{1}{e} \sum_{k=0}^{\infty} \frac{k^n}{k!}
+\]
+
+\subsection{Composiciones}
+
+Una composición es una partición ordenada. El número de composiciones de $n$ en $k$ partes es:
+\[
+\binom{n-1}{k-1}
+\]
+
+El número total de composiciones de $n$ es $2^{n-1}$.
+
+\begin{lstlisting}
+// Numero de composiciones de n en k partes
+long long compositions(int n, int k) {
+    if (k > n || k <= 0) return 0;
+    return binomial(n - 1, k - 1);
+}
+
+// Generar todas las composiciones de n en k partes
+void generateCompositions(int n, int k, vector<int>& current,
+                         vector<vector<int>>& result) {
+    if (k == 1) {
+        current.push_back(n);
+        result.push_back(current);
+        current.pop_back();
+        return;
+    }
+    
+    for (int i = 1; i <= n - k + 1; i++) {
+        current.push_back(i);
+        generateCompositions(n - i, k - 1, current, result);
+        current.pop_back();
+    }
+}
+\end{lstlisting}
+
+\section{Manipulación de Dígitos}
+
+\subsection{Extracción y Conversión de Dígitos}
+
+\begin{lstlisting}
+// Obtener digitos de un numero
+vector<int> getDigits(long long n) {
+    if (n == 0) return {0};
+    
+    vector<int> digits;
+    while (n > 0) {
+        digits.push_back(n % 10);
+        n /= 10;
+    }
+    reverse(digits.begin(), digits.end());
+    return digits;
+}
+
+// Construir numero desde digitos
+long long fromDigits(const vector<int>& digits) {
+    long long num = 0;
+    for (int d : digits) {
+        num = num * 10 + d;
+    }
+    return num;
+}
+
+// Suma de digitos
+int digitSum(long long n) {
+    int sum = 0;
+    while (n > 0) {
+        sum += n % 10;
+        n /= 10;
+    }
+    return sum;
+}
+
+// Producto de digitos
+long long digitProduct(long long n) {
+    if (n == 0) return 0;
+    
+    long long prod = 1;
+    while (n > 0) {
+        prod *= n % 10;
+        n /= 10;
+    }
+    return prod;
+}
+
+// Numero de digitos
+int countDigits(long long n) {
+    if (n == 0) return 1;
+    return floor(log10(n)) + 1;
+}
+
+// Raiz digital (suma iterada de digitos hasta obtener un digito)
+int digitalRoot(long long n) {
+    return n == 0 ? 0 : 1 + (n - 1) % 9;
+}
+\end{lstlisting}
+
+\subsection{Palíndromos Numéricos}
+
+\begin{lstlisting}
+// Verificar si es palindromo
+bool isPalindrome(long long n) {
+    string s = to_string(n);
+    int left = 0, right = s.length() - 1;
+    
+    while (left < right) {
+        if (s[left] != s[right]) return false;
+        left++;
+        right--;
+    }
+    
+    return true;
+}
+
+// Generar palindromo de n digitos
+long long generatePalindrome(int n, int k) {
+    // k-esimo palindromo de n digitos
+    string half = to_string(k);
+    while (half.length() < (n + 1) / 2) {
+        half = "0" + half;
+    }
+    
+    string palindrome = half;
+    int start = (n % 2 == 0) ? half.length() - 1 : half.length() - 2;
+    
+    for (int i = start; i >= 0; i--) {
+        palindrome += half[i];
+    }
+    
+    return stoll(palindrome);
+}
+
+// Siguiente palindromo mayor que n
+long long nextPalindrome(long long n) {
+    string s = to_string(n + 1);
+    int len = s.length();
+    int mid = len / 2;
+    
+    // Copiar primera mitad a segunda mitad (reflejada)
+    for (int i = 0; i < mid; i++) {
+        s[len - 1 - i] = s[i];
+    }
+    
+    long long candidate = stoll(s);
+    
+    if (candidate > n) return candidate;
+    
+    // Incrementar la parte media
+    bool carry = true;
+    for (int i = (len - 1) / 2; i >= 0 && carry; i--) {
+        if (s[i] == '9') {
+            s[i] = '0';
+        } else {
+            s[i]++;
+            carry = false;
+        }
+        s[len - 1 - i] = s[i];
+    }
+    
+    if (carry) {
+        s = "1" + string(len - 1, '0') + "1";
+    }
+    
+    return stoll(s);
+}
+\end{lstlisting}
+
+\subsection{Bases Numéricas}
+
+\begin{lstlisting}
+// Convertir de base 10 a base b
+string toBase(long long n, int b) {
+    if (n == 0) return "0";
+    
+    string digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    string result = "";
+    
+    while (n > 0) {
+        result = digits[n % b] + result;
+        n /= b;
+    }
+    
+    return result;
+}
+
+// Convertir de base b a base 10
+long long fromBase(const string& s, int b) {
+    long long result = 0;
+    long long power = 1;
+    
+    for (int i = s.length() - 1; i >= 0; i--) {
+        int digit;
+        if (s[i] >= '0' && s[i] <= '9') {
+            digit = s[i] - '0';
+        } else {
+            digit = s[i] - 'A' + 10;
+        }
+        result += digit * power;
+        power *= b;
+    }
+    
+    return result;
+}
+
+// Suma de digitos en base b
+int digitSumBase(long long n, int b) {
+    int sum = 0;
+    while (n > 0) {
+        sum += n % b;
+        n /= b;
+    }
+    return sum;
+}
+
+// Numero de digitos en base b
+int countDigitsBase(long long n, int b) {
+    if (n == 0) return 1;
+    return floor(log(n) / log(b)) + 1;
+}
+\end{lstlisting}
+
+\section{Fórmulas de Recurrencia}
+
+\subsection{Resolver Recurrencias Lineales}
+
+\textbf{Forma general:}
+\[
+a_n = c_1 a_{n-1} + c_2 a_{n-2} + \cdots + c_k a_{n-k}
+\]
+
+\textbf{Método de ecuación característica:}
+
+La ecuación característica es:
+\[
+r^k = c_1 r^{k-1} + c_2 r^{k-2} + \cdots + c_k
+\]
+
+\textbf{Ejemplo - Fibonacci:}
+\[
+F_n = F_{n-1} + F_{n-2} \implies r^2 = r + 1 \implies r = \frac{1 \pm \sqrt{5}}{2}
+\]
+
+\textbf{Solución:}
+\[
+F_n = A\phi^n + B\psi^n
+\]
+
+donde $A$ y $B$ se determinan con condiciones iniciales.
+
+\begin{lstlisting}
+// Recurrencia lineal con matriz (O(k^3 log n))
+template<typename T>
+struct LinearRecurrence {
+    vector<T> coeffs; // c_1, c_2, ..., c_k
+    vector<T> initial; // a_0, a_1, ..., a_{k-1}
+    T mod;
+    
+    LinearRecurrence(vector<T> c, vector<T> init, T mod = 1e9+7) 
+        : coeffs(c), initial(init), mod(mod) {}
+    
+    // Multiplicar dos matrices k x k
+    vector<vector<T>> matmul(const vector<vector<T>>& A,
+                            const vector<vector<T>>& B) {
+        int k = A.size();
+        vector<vector<T>> C(k, vector<T>(k, 0));
+        
+        for (int i = 0; i < k; i++) {
+            for (int j = 0; j < k; j++) {
+                for (int p = 0; p < k; p++) {
+                    C[i][j] = (C[i][j] + A[i][p] * B[p][j]) % mod;
+                }
+            }
+        }
+        
+        return C;
+    }
+    
+    // Exponenciacion de matriz
+    vector<vector<T>> matpow(vector<vector<T>> base, long long exp) {
+        int k = base.size();
+        vector<vector<T>> res(k, vector<T>(k, 0));
+        
+        // Matriz identidad
+        for (int i = 0; i < k; i++) res[i][i] = 1;
+        
+        while (exp > 0) {
+            if (exp & 1) res = matmul(res, base);
+            base = matmul(base, base);
+            exp >>= 1;
+        }
+        
+        return res;
+    }
+    
+    T nth(long long n) {
+        int k = coeffs.size();
+        
+        if (n < k) return initial[n];
+        
+        // Construir matriz de transicion
+        vector<vector<T>> trans(k, vector<T>(k, 0));
+        
+        // Primera fila: coeficientes
+        for (int i = 0; i < k; i++) {
+            trans[0][i] = coeffs[i];
+        }
+        
+        // Resto: matriz identidad desplazada
+        for (int i = 1; i < k; i++) {
+            trans[i][i-1] = 1;
+        }
+        
+        // Calcular trans^(n-k+1)
+        auto result = matpow(trans, n - k + 1);
+        
+        // Multiplicar con condiciones iniciales (invertidas)
+        T ans = 0;
+        for (int i = 0; i < k; i++) {
+            ans = (ans + result[0][i] * initial[k - 1 - i]) % mod;
+        }
+        
+        return ans;
+    }
+};
+\end{lstlisting}
+
+\subsection{Recurrencias Famosas}
+
+\textbf{Números de Lucas:}
+\[
+L_n = L_{n-1} + L_{n-2}, \quad L_0 = 2, \quad L_1 = 1
+\]
+
+Relación con Fibonacci: $L_n = F_{n-1} + F_{n+1}$
+
+\textbf{Números de Tribonacci:}
+\[
+T_n = T_{n-1} + T_{n-2} + T_{n-3}, \quad T_0 = 0, \quad T_1 = 0, \quad T_2 = 1
+\]
+
+\textbf{Números de Pell:}
+\[
+P_n = 2P_{n-1} + P_{n-2}, \quad P_0 = 0, \quad P_1 = 1
+\]
+
+\begin{lstlisting}
+// Numeros de Lucas
+long long lucas(int n, long long mod) {
+    if (n == 0) return 2;
+    if (n == 1) return 1;
+    
+    long long a = 2, b = 1;
+    for (int i = 2; i <= n; i++) {
+        long long c = (a + b) % mod;
+        a = b;
+        b = c;
+    }
+    
+    return b;
+}
+
+// Numeros de Tribonacci
+long long tribonacci(int n, long long mod) {
+    if (n == 0 || n == 1) return 0;
+    if (n == 2) return 1;
+    
+    long long a = 0, b = 0, c = 1;
+    
+    for (int i = 3; i <= n; i++) {
+        long long d = (a + b + c) % mod;
+        a = b;
+        b = c;
+        c = d;
+    }
+    
+    return c;
+}
+
+// Numeros de Pell
+long long pell(int n, long long mod) {
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+    
+    long long a = 0, b = 1;
+    
+    for (int i = 2; i <= n; i++) {
+        long long c = (2 * b + a) % mod;
+        a = b;
+        b = c;
+    }
+    
+    return b;
+}
+\end{lstlisting}
+
+\section{Probabilidad y Valor Esperado}
+
+\subsection{Probabilidad Básica}
+
+\textbf{Regla del producto:}
+\[
+P(A \cap B) = P(A) \cdot P(B|A)
+\]
+
+\textbf{Regla de la suma:}
+\[
+P(A \cup B) = P(A) + P(B) - P(A \cap B)
+\]
+
+\textbf{Probabilidad condicional:}
+\[
+P(A|B) = \frac{P(A \cap B)}{P(B)}
+\]
+
+\textbf{Eventos independientes:}
+\[
+P(A \cap B) = P(A) \cdot P(B)
+\]
+
+\subsection{Valor Esperado}
+
+\textbf{Definición:}
+\[
+E[X] = \sum_{i} x_i \cdot P(X = x_i)
+\]
+
+\textbf{Linealidad del valor esperado:}
+\[
+E[aX + bY] = aE[X] + bE[Y]
+\]
+
+Esta propiedad es válida incluso si $X$ e $Y$ no son independientes.
+
+\textbf{Valor esperado del producto (variables independientes):}
+\[
+E[XY] = E[X] \cdot E[Y]
+\]
+
+\subsection{Problemas Clásicos}
+
+\textbf{Problema del coleccionista de cupones:}
+
+¿Cuántas cajas hay que abrir en promedio para obtener todos los $n$ cupones diferentes?
+
+\[
+E = n \sum_{i=1}^{n} \frac{1}{i} = n \cdot H_n \approx n \ln n
+\]
+
+\textbf{Problema de las parejas:}
+
+Probabilidad de que al menos una pareja se siente junta en una permutación aleatoria:
+
+\[
+P = 1 - \frac{D_n}{n!}
+\]
+
+donde $D_n$ es el número de desarreglos.
+
+\begin{lstlisting}
+// Valor esperado discreto
+double expectedValue(const vector<double>& values,
+                    const vector<double>& probabilities) {
+    double E = 0;
+    for (int i = 0; i < values.size(); i++) {
+        E += values[i] * probabilities[i];
+    }
+    return E;
+}
+
+// Coleccionista de cupones
+double couponCollector(int n) {
+    double E = 0;
+    for (int i = 1; i <= n; i++) {
+        E += (double)n / i;
+    }
+    return E;
+}
+
+// Desarreglos (permutaciones sin puntos fijos)
+long long derangements(int n, long long mod) {
+    if (n == 0) return 1;
+    if (n == 1) return 0;
+    
+    long long a = 1, b = 0;
+    
+    for (int i = 2; i <= n; i++) {
+        long long c = ((i - 1) * ((a + b) % mod)) % mod;
+        a = b;
+        b = c;
+    }
+    
+    return b;
+}
+
+// Formula de desarreglos: D_n = n! * sum((-1)^k / k!)
+long long derangementsFormula(int n, long long mod) {
+    vector<long long> fact(n + 1);
+    fact[0] = 1;
+    for (int i = 1; i <= n; i++) {
+        fact[i] = (fact[i-1] * i) % mod;
+    }
+    
+    long long sum = 0;
+    long long sign = 1;
+    
+    for (int k = 0; k <= n; k++) {
+        long long inv_fact = binpow(fact[k], mod - 2, mod);
+        sum = (sum + sign * inv_fact + mod) % mod;
+        sign = -sign;
+    }
+    
+    return (fact[n] * sum) % mod;
+}
+\end{lstlisting}
+
+\section{Funciones Especiales}
+
+\subsection{Función de Möbius}
+
+\[
+\mu(n) = \begin{cases}
+1 & \text{si } n = 1 \\
+0 & \text{si } n \text{ tiene un factor cuadrado} \\
+(-1)^k & \text{si } n \text{ es producto de } k \text{ primos distintos}
+\end{cases}
+\]
+
+\textbf{Propiedad importante:}
+\[
+\sum_{d|n} \mu(d) = \begin{cases}
+1 & \text{si } n = 1 \\
+0 & \text{si } n > 1
+\end{cases}
+\]
+
+\textbf{Fórmula de inversión de Möbius:}
+\[
+g(n) = \sum_{d|n} f(d) \iff f(n) = \sum_{d|n} \mu(d) g(n/d)
+\]
+
+\begin{lstlisting}
+// Funcion de Mobius
+vector<int> mobiusSieve(int n) {
+    vector<int> mu(n + 1, 1);
+    vector<bool> is_prime(n + 1, true);
+    
+    for (int i = 2; i <= n; i++) {
+        if (is_prime[i]) {
+            for (int j = i; j <= n; j += i) {
+                is_prime[j] = false;
+                mu[j] *= -1;
+            }
+            
+            // Marcar multiplos de i^2
+            if ((long long)i * i <= n) {
+                for (long long j = (long long)i * i; j <= n; j += (long long)i * i) {
+                    mu[j] = 0;
+                }
+            }
+        }
+    }
+    
+    mu[0] = 0;
+    return mu;
+}
+
+// Mobius de un numero
+int mobius(long long n) {
+    int mu = 1;
+    
+    for (long long p = 2; p * p <= n; p++) {
+        if (n % p == 0) {
+            n /= p;
+            mu *= -1;
+            
+            if (n % p == 0) return 0; // Tiene factor cuadrado
+        }
+    }
+    
+    if (n > 1) mu *= -1;
+    
+    return mu;
+}
+\end{lstlisting}
+
+\subsection{Función Tau (Función Divisor)}
+
+Ya vista anteriormente. Cuenta el número de divisores.
+
+\textbf{Valor promedio:}
+\[
+\frac{1}{n}\sum_{k=1}^{n} \tau(k) \approx \ln n
+\]
+
+\subsection{Función Sigma (Suma de Divisores)}
+
+\textbf{Números perfectos:} $n$ es perfecto si $\sigma(n) = 2n$.
+
+Ejemplo: $6 = 1 + 2 + 3$, $28 = 1 + 2 + 4 + 7 + 14$
+
+\textbf{Teorema de Euclides-Euler:} Un número par es perfecto si y solo si tiene la forma:
+\[
+2^{p-1}(2^p - 1)
+\]
+donde $2^p - 1$ es primo (primo de Mersenne).
+
+\begin{lstlisting}
+// Verificar si es numero perfecto
+bool isPerfect(long long n) {
+    return sumDivisors(n) == 2 * n;
+}
+
+// Generar numeros perfectos pares
+vector<long long> generatePerfectNumbers(int count) {
+    vector<long long> perfects;
+    
+    // Verificar primos de Mersenne 2^p - 1
+    for (int p = 2; perfects.size() < count && p < 64; p++) {
+        long long mersenne = (1LL << p) - 1;
+        
+        if (isPrime(mersenne)) {
+            long long perfect = (1LL << (p - 1)) * mersenne;
+            perfects.push_back(perfect);
+        }
+    }
+    
+    return perfects;
+}
+
+// Numeros abundantes: sigma(n) > 2n
+bool isAbundant(long long n) {
+    return sumDivisors(n) > 2 * n;
+}
+
+// Numeros deficientes: sigma(n) < 2n
+bool isDeficient(long long n) {
+    return sumDivisors(n) < 2 * n;
+}
+\end{lstlisting}
+
+\section{Identidades Algebraicas Útiles}
+
+\subsection{Productos Notables}
+
+\begin{align*}
+(a + b)^2 &= a^2 + 2ab + b^2 \\
+(a - b)^2 &= a^2 - 2ab + b^2 \\
+(a + b)(a - b) &= a^2 - b^2 \\
+(a + b)^3 &= a^3 + 3a^2b + 3ab^2 + b^3 \\
+(a - b)^3 &= a^3 - 3a^2b + 3ab^2 - b^3 \\
+a^3 + b^3 &= (a + b)(a^2 - ab + b^2) \\
+a^3 - b^3 &= (a - b)(a^2 + ab + b^2) \\
+a^n - b^n &= (a - b)(a^{n-1} + a^{n-2}b + \cdots + ab^{n-2} + b^{n-1})
+\end{align*}
+
+\subsection{Binomio de Newton}
+
+\[
+\boxed{(a + b)^n = \sum_{k=0}^{n} \binom{n}{k} a^{n-k} b^k}
+\]
+
+\textbf{Casos especiales:}
+\begin{align*}
+(1 + x)^n &= \sum_{k=0}^{n} \binom{n}{k} x^k \\
+(1 - x)^n &= \sum_{k=0}^{n} \binom{n}{k} (-1)^k x^k \\
+2^n &= \sum_{k=0}^{n} \binom{n}{k}
+\end{align*}
+
+\begin{lstlisting}
+// Expandir (a + b)^n modulo m
+vector<long long> binomialExpansion(long long a, long long b, int n, 
+                                    long long mod) {
+    BinomialMod binom(n, mod);
+    vector<long long> result(n + 1);
+    
+    long long pow_a = 1, pow_b = binpow(b, n, mod);
+    
+    for (int k = 0; k <= n; k++) {
+        result[k] = (binom.C(n, k) * pow_a % mod) * pow_b % mod;
+        
+        pow_a = (pow_a * a) % mod;
+        pow_b = (pow_b * modinv(b, mod)) % mod;
+    }
+    
+    return result;
+}
+
+// Coeficiente de x^k en (a + bx)^n
+long long binomialCoeff(long long a, long long b, int n, int k,
+                       long long mod) {
+    BinomialMod binom(n, mod);
+    long long pow_a = binpow(a, n - k, mod);
+    long long pow_b = binpow(b, k, mod);
+    
+    return (binom.C(n, k) * pow_a % mod) * pow_b % mod;
+}
+\end{lstlisting}
+
+\subsection{Factorización de Polinomios}
+
+\textbf{Suma de potencias:}
+\[
+a^n + b^n = (a + b)(a^{n-1} - a^{n-2}b + a^{n-3}b^2 - \cdots + b^{n-1}) \quad (n \text{ impar})
+\]
+
+\textbf{Fórmula de Sophie Germain:}
+\[
+a^4 + 4b^4 = (a^2 + 2b^2 + 2ab)(a^2 + 2b^2 - 2ab)
+\]
+
+\section{Optimización con Fórmulas}
+
+\subsection{Suma de Subconjuntos}
+
+\textbf{Problema:} Encontrar si existe un subconjunto de suma $S$.
+
+\textbf{Suma total de todos los subconjuntos:}
+Si tenemos elementos $a_1, a_2, \ldots, a_n$, la suma de todos los posibles subconjuntos es:
+\[
+\boxed{2^{n-1} \sum_{i=1}^{n} a_i}
+\]
+
+Cada elemento aparece en exactamente $2^{n-1}$ subconjuntos.
+
+\begin{lstlisting}
+// Suma de todos los subconjuntos
+long long sumAllSubsets(const vector<int>& arr, long long mod) {
+    long long sum = 0;
+    for (int x : arr) sum = (sum + x) % mod;
+    
+    long long power = binpow(2, arr.size() - 1, mod);
+    return (sum * power) % mod;
+}
+
+// Contar subconjuntos con suma divisible por k
+int countSubsetsDivisible(const vector<int>& arr, int k) {
+    vector<int> dp(k, 0);
+    dp[0] = 1;
+    
+    for (int x : arr) {
+        vector<int> new_dp = dp;
+        for (int rem = 0; rem < k; rem++) {
+            new_dp[(rem + x % k + k) % k] += dp[rem];
+        }
+        dp = new_dp;
+    }
+    
+    return dp[0] - 1; // Restar subconjunto vacio
+}
+\end{lstlisting}
+
+\subsection{XOR de Subconjuntos}
+
+\textbf{XOR de todos los subconjuntos:}
+
+Si un elemento $a_i$ aparece $k$ veces en los subconjuntos, su contribución al XOR total es:
+- 0 si $k$ es par
+- $a_i$ si $k$ es impar
+
+Cada elemento aparece en $2^{n-1}$ subconjuntos, entonces:
+\[
+\text{XOR total} = \begin{cases}
+0 & \text{si } n > 1 \\
+a_1 & \text{si } n = 1
+\end{cases}
+\]
+
+\begin{lstlisting}
+// XOR de todos los subconjuntos
+int xorAllSubsets(const vector<int>& arr) {
+    if (arr.size() == 1) return arr[0];
+    return 0; // Si n > 1, cada elemento aparece par veces
+}
+
+// Suma de XOR de todos los subconjuntos bit por bit
+long long sumXORSubsets(const vector<int>& arr, long long mod) {
+    int n = arr.size();
+    long long result = 0;
+    long long power = binpow(2, n - 1, mod);
+    
+    for (int bit = 0; bit < 30; bit++) {
+        int count = 0;
+        for (int x : arr) {
+            if (x & (1 << bit)) count++;
+        }
+        
+        // Este bit contribuye count * 2^(n-1) * 2^bit al total
+        long long contribution = (count * power % mod) * (1LL << bit) % mod;
+        result = (result + contribution) % mod;
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Producto de Elementos}
+
+\textbf{Producto de todos los subconjuntos no vacíos:}
+
+Si tenemos $n$ elementos $a_1, a_2, \ldots, a_n$, el producto de todos los subconjuntos es:
+\[
+\boxed{\prod_{i=1}^{n} a_i^{2^{n-1}}}
+\]
+
+\begin{lstlisting}
+// Producto de todos los subconjuntos (modular)
+long long productAllSubsets(const vector<long long>& arr, long long mod) {
+    int n = arr.size();
+    long long result = 1;
+    long long exponent = binpow(2, n - 1, mod - 1); // Teorema de Fermat
+    
+    for (long long x : arr) {
+        result = (result * binpow(x, exponent, mod)) % mod;
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\section{Desigualdades Importantes}
+
+\subsection{Desigualdad Triangular}
+
+\[
+|a + b| \leq |a| + |b|
+\]
+
+\[
+|a - b| \geq ||a| - |b||
+\]
+
+\subsection{Desigualdades de Medias}
+
+Para números positivos $a_1, a_2, \ldots, a_n$:
+
+\textbf{Media Armónica $\leq$ Media Geométrica $\leq$ Media Aritmética $\leq$ Media Cuadrática}
+
+\[
+\boxed{\frac{n}{\sum \frac{1}{a_i}} \leq \sqrt[n]{\prod a_i} \leq \frac{\sum a_i}{n} \leq \sqrt{\frac{\sum a_i^2}{n}}}
+\]
+
+\begin{lstlisting}
+// Calcular diferentes medias
+double harmonicMean(const vector<double>& arr) {
+    double sum = 0;
+    for (double x : arr) sum += 1.0 / x;
+    return arr.size() / sum;
+}
+
+double geometricMean(const vector<double>& arr) {
+    double product = 1;
+    for (double x : arr) product *= x;
+    return pow(product, 1.0 / arr.size());
+}
+
+double arithmeticMean(const vector<double>& arr) {
+    double sum = 0;
+    for (double x : arr) sum += x;
+    return sum / arr.size();
+}
+
+double quadraticMean(const vector<double>& arr) {
+    double sum = 0;
+    for (double x : arr) sum += x * x;
+    return sqrt(sum / arr.size());
+}
+\end{lstlisting}
+
+\subsection{Desigualdad de Cauchy-Schwarz}
+
+\[
+\boxed{\left(\sum_{i=1}^{n} a_i b_i\right)^2 \leq \left(\sum_{i=1}^{n} a_i^2\right) \left(\sum_{i=1}^{n} b_i^2\right)}
+\]
+
+La igualdad se da cuando $a_i$ y $b_i$ son proporcionales.
+
+\begin{lstlisting}
+// Verificar desigualdad de Cauchy-Schwarz
+bool verifyCauchySchwarz(const vector<double>& a, 
+                        const vector<double>& b) {
+    double sum_ab = 0, sum_a2 = 0, sum_b2 = 0;
+    
+    for (int i = 0; i < a.size(); i++) {
+        sum_ab += a[i] * b[i];
+        sum_a2 += a[i] * a[i];
+        sum_b2 += b[i] * b[i];
+    }
+    
+    return sum_ab * sum_ab <= sum_a2 * sum_b2 + 1e-9;
+}
+\end{lstlisting}
+
+\subsection{Desigualdad de Bernoulli}
+
+Para $x \geq -1$ y $n \geq 0$:
+\[
+\boxed{(1 + x)^n \geq 1 + nx}
+\]
+
+Con igualdad solo cuando $x = 0$ o $n = 1$.
+
+\section{Manipulación de Módulos}
+
+\subsection{Propiedades Básicas}
+
+\begin{align*}
+(a + b) \bmod m &= ((a \bmod m) + (b \bmod m)) \bmod m \\
+(a - b) \bmod m &= ((a \bmod m) - (b \bmod m) + m) \bmod m \\
+(a \cdot b) \bmod m &= ((a \bmod m) \cdot (b \bmod m)) \bmod m \\
+a^b \bmod m &= \text{usar exponenciación binaria}
+\end{align*}
+
+\begin{lstlisting}
+// Operaciones modulares seguras
+long long addMod(long long a, long long b, long long mod) {
+    return ((a % mod) + (b % mod)) % mod;
+}
+
+long long subMod(long long a, long long b, long long mod) {
+    return ((a % mod) - (b % mod) + mod) % mod;
+}
+
+long long mulMod(long long a, long long b, long long mod) {
+    return ((a % mod) * (b % mod)) % mod;
+}
+
+// Multiplicacion modular segura contra overflow
+long long mulModSafe(long long a, long long b, long long mod) {
+    long long result = 0;
+    a %= mod;
+    
+    while (b > 0) {
+        if (b & 1) result = (result + a) % mod;
+        a = (a * 2) % mod;
+        b >>= 1;
+    }
+    
+    return result;
+}
+
+// Usando __int128 para evitar overflow
+long long mulMod128(long long a, long long b, long long mod) {
+    return (__int128)a * b % mod;
+}
+\end{lstlisting}
+
+\subsection{Raíz Cuadrada Modular}
+
+Encontrar $x$ tal que $x^2 \equiv a \pmod{p}$ (donde $p$ es primo).
+
+\textbf{Símbolo de Legendre:}
+\[
+\left(\frac{a}{p}\right) = a^{(p-1)/2} \bmod p = \begin{cases}
+1 & \text{si } a \text{ es residuo cuadrático} \\
+-1 & \text{si } a \text{ no es residuo cuadrático} \\
+0 & \text{si } a \equiv 0 \pmod{p}
+\end{cases}
+\]
+
+\begin{lstlisting}
+// Simbolo de Legendre
+int legendre(long long a, long long p) {
+    long long result = binpow(a, (p - 1) / 2, p);
+    return result == p - 1 ? -1 : result;
+}
+
+// Raiz cuadrada modular (Algoritmo de Tonelli-Shanks)
+long long sqrtMod(long long a, long long p) {
+    a %= p;
+    if (a == 0) return 0;
+    
+    if (p == 2) return a;
+    
+    // Verificar si tiene solucion
+    if (legendre(a, p) != 1) return -1;
+    
+    // Caso especial: p ≡ 3 (mod 4)
+    if (p % 4 == 3) {
+        return binpow(a, (p + 1) / 4, p);
+    }
+    
+    // Tonelli-Shanks para caso general
+    // (Implementacion simplificada)
+    long long s = 0, q = p - 1;
+    while (q % 2 == 0) {
+        q /= 2;
+        s++;
+    }
+    
+    // Encontrar un no-residuo z
+    long long z = 2;
+    while (legendre(z, p) != -1) z++;
+    
+    long long m = s;
+    long long c = binpow(z, q, p);
+    long long t = binpow(a, q, p);
+    long long r = binpow(a, (q + 1) / 2, p);
+    
+    while (t != 1) {
+        long long i = 1;
+        long long temp = (t * t) % p;
+        
+        while (temp != 1 && i < m) {
+            temp = (temp * temp) % p;
+            i++;
+        }
+        
+        long long b = binpow(c, 1LL << (m - i - 1), p);
+        m = i;
+        c = (b * b) % p;
+        t = (t * c) % p;
+        r = (r * b) % p;
+    }
+    
+    return r;
+}
+\end{lstlisting}
+
+\section{Trucos y Técnicas Avanzadas}
+
+\subsection{Suma de Rango en O(1)}
+
+Precalcular sumas prefijas para responder consultas de rango en $O(1)$.
+
+\begin{lstlisting}
+// Suma de rango con prefix sum
+struct RangeSum {
+    vector<long long> prefix;
+    
+    RangeSum(const vector<int>& arr) {
+        int n = arr.size();
+        prefix.resize(n + 1, 0);
+        
+        for (int i = 0; i < n; i++) {
+            prefix[i + 1] = prefix[i] + arr[i];
+        }
+    }
+    
+    // Suma de [l, r] (0-indexed)
+    long long query(int l, int r) {
+        return prefix[r + 1] - prefix[l];
+    }
+};
+
+// Suma 2D
+struct RangeSum2D {
+    vector<vector<long long>> prefix;
+    
+    RangeSum2D(const vector<vector<int>>& matrix) {
+        int n = matrix.size();
+        int m = matrix[0].size();
+        
+        prefix.assign(n + 1, vector<long long>(m + 1, 0));
+        
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                prefix[i+1][j+1] = matrix[i][j] 
+                                 + prefix[i][j+1] 
+                                 + prefix[i+1][j] 
+                                 - prefix[i][j];
+            }
+        }
+    }
+    
+    // Suma del rectangulo [(r1,c1), (r2,c2)]
+    long long query(int r1, int c1, int r2, int c2) {
+        return prefix[r2+1][c2+1] 
+             - prefix[r1][c2+1] 
+             - prefix[r2+1][c1] 
+             + prefix[r1][c1];
+    }
+};
+\end{lstlisting}
+
+\subsection{Diferencia Finita}
+
+Técnica para actualizaciones de rango en $O(1)$.
+
+\begin{lstlisting}
+// Diferencia finita para updates de rango
+struct RangeUpdate {
+    vector<long long> diff;
+    int n;
+    
+    RangeUpdate(int n) : n(n) {
+        diff.assign(n + 1, 0);
+    }
+    
+    // Agregar val a [l, r]
+    void update(int l, int r, long long val) {
+        diff[l] += val;
+        diff[r + 1] -= val;
+    }
+    
+    // Construir array final
+    vector<long long> build() {
+        vector<long long> arr(n);
+        long long curr = 0;
+        
+        for (int i = 0; i < n; i++) {
+            curr += diff[i];
+            arr[i] = curr;
+        }
+        
+        return arr;
+    }
+};
+\end{lstlisting}
+
+\subsection{Suma de Subarreglos}
+
+Contribución de cada elemento a todas las sumas de subarreglos.
+
+\[
+\text{Contribución de } a_i = a_i \times (i + 1) \times (n - i)
+\]
+
+\begin{lstlisting}
+// Suma de todos los subarreglos
+long long sumAllSubarrays(const vector<int>& arr, long long mod) {
+    long long result = 0;
+    int n = arr.size();
+    
+    for (int i = 0; i < n; i++) {
+        long long contribution = (long long)arr[i] * (i + 1) % mod 
+                                                    * (n - i) % mod;
+        result = (result + contribution) % mod;
+    }
+    
+    return result;
+}
+
+// Producto de todos los subarreglos
+long long productAllSubarrays(const vector<int>& arr, long long mod) {
+    long long result = 1;
+    int n = arr.size();
+    
+    for (int i = 0; i < n; i++) {
+        long long exponent = (long long)(i + 1) * (n - i) % (mod - 1);
+        result = (result * binpow(arr[i], exponent, mod)) % mod;
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\section{Series y Límites Importantes}
+
+\subsection{Series de Potencias}
+
+\textbf{Serie geométrica:}
+\[
+\sum_{k=0}^{\infty} x^k = \frac{1}{1-x} \quad (|x| < 1)
+\]
+
+\textbf{Serie exponencial:}
+\[
+e^x = \sum_{k=0}^{\infty} \frac{x^k}{k!}
+\]
+
+\textbf{Serie de seno y coseno:}
+\begin{align*}
+\sin(x) &= \sum_{k=0}^{\infty} \frac{(-1)^k x^{2k+1}}{(2k+1)!} \\
+\cos(x) &= \sum_{k=0}^{\infty} \frac{(-1)^k x^{2k}}{(2k)!}
+\end{align*}
+
+\textbf{Serie logarítmica:}
+\[
+\ln(1+x) = \sum_{k=1}^{\infty} \frac{(-1)^{k+1} x^k}{k} \quad (|x| < 1)
+\]
+
+\begin{lstlisting}
+// Calcular e^x con serie de Taylor
+double exp_taylor(double x, int terms = 20) {
+    double result = 1.0;
+    double term = 1.0;
+    
+    for (int k = 1; k < terms; k++) {
+        term *= x / k;
+        result += term;
+    }
+    
+    return result;
+}
+
+// Calcular sin(x) con serie de Taylor
+double sin_taylor(double x, int terms = 20) {
+    double result = 0.0;
+    double term = x;
+    
+    for (int k = 0; k < terms; k++) {
+        result += (k % 2 == 0 ? 1 : -1) * term;
+        term *= x * x / ((2*k + 2) * (2*k + 3));
+    }
+    
+    return result;
+}
+
+// Calcular ln(1+x) con serie de Taylor
+double ln_taylor(double x, int terms = 100) {
+    if (abs(x) >= 1) return NAN; // No converge
+    
+    double result = 0.0;
+    double term = x;
+    
+    for (int k = 1; k < terms; k++) {
+        result += (k % 2 == 1 ? 1 : -1) * term / k;
+        term *= x;
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Límites Fundamentales}
+
+\[
+\lim_{n \to \infty} \left(1 + \frac{1}{n}\right)^n = e
+\]
+
+\[
+\lim_{x \to 0} \frac{\sin x}{x} = 1
+\]
+
+\[
+\lim_{n \to \infty} \frac{a^n}{n!} = 0 \quad \text{(para cualquier } a)
+\]
+
+\[
+\lim_{n \to \infty} \sqrt[n]{n} = 1
+\]
+
+\subsection{Aproximaciones de Stirling}
+
+\[
+\boxed{n! \approx \sqrt{2\pi n} \left(\frac{n}{e}\right)^n}
+\]
+
+\[
+\ln(n!) \approx n\ln(n) - n + \frac{1}{2}\ln(2\pi n)
+\]
+
+\begin{lstlisting}
+// Aproximacion de Stirling para ln(n!)
+double stirlingLogFactorial(int n) {
+    const double PI = acos(-1.0);
+    return n * log(n) - n + 0.5 * log(2 * PI * n);
+}
+
+// Aproximacion de Stirling para n!
+double stirlingFactorial(int n) {
+    const double PI = acos(-1.0);
+    return sqrt(2 * PI * n) * pow(n / M_E, n);
+}
+\end{lstlisting}
+
+\section{Problemas Clásicos y Aplicaciones}
+
+\subsection{Problema de Cambio de Monedas}
+
+¿De cuántas formas podemos dar cambio de $n$ usando monedas de denominaciones dadas?
+
+\begin{lstlisting}
+// Cambio de monedas - numero de formas
+long long coinChange(int n, const vector<int>& coins, long long mod) {
+    vector<long long> dp(n + 1, 0);
+    dp[0] = 1;
+    
+    for (int coin : coins) {
+        for (int i = coin; i <= n; i++) {
+            dp[i] = (dp[i] + dp[i - coin]) % mod;
+        }
+    }
+    
+    return dp[n];
+}
+
+// Minimo numero de monedas para hacer n
+int minCoins(int n, const vector<int>& coins) {
+    vector<int> dp(n + 1, INT_MAX);
+    dp[0] = 0;
+    
+    for (int i = 1; i <= n; i++) {
+        for (int coin : coins) {
+            if (coin <= i && dp[i - coin] != INT_MAX) {
+                dp[i] = min(dp[i], dp[i - coin] + 1);
+            }
+        }
+    }
+    
+    return dp[n] == INT_MAX ? -1 : dp[n];
+}
+\end{lstlisting}
+
+\subsection{Subsecuencia Creciente Más Larga (LIS)}
+
+\textbf{Teorema de Erdős-Szekeres:}
+
+En cualquier secuencia de $n^2 + 1$ números distintos, existe una subsecuencia creciente o decreciente de longitud al menos $n + 1$.
+
+\begin{lstlisting}
+// LIS con DP - O(n^2)
+int LIS_dp(const vector<int>& arr) {
+    int n = arr.size();
+    vector<int> dp(n, 1);
+    
+    for (int i = 1; i < n; i++) {
+        for (int j = 0; j < i; j++) {
+            if (arr[j] < arr[i]) {
+                dp[i] = max(dp[i], dp[j] + 1);
+            }
+        }
+    }
+    
+    return *max_element(dp.begin(), dp.end());
+}
+
+// LIS con busqueda binaria - O(n log n)
+int LIS_binary(const vector<int>& arr) {
+    vector<int> lis;
+    
+    for (int x : arr) {
+        auto it = lower_bound(lis.begin(), lis.end(), x);
+        if (it == lis.end()) {
+            lis.push_back(x);
+        } else {
+            *it = x;
+        }
+    }
+    
+    return lis.size();
+}
+
+// Numero de LIS
+int countLIS(const vector<int>& arr, long long mod) {
+    int n = arr.size();
+    vector<int> length(n, 1);
+    vector<long long> count(n, 1);
+    
+    int maxLen = 1;
+    
+    for (int i = 1; i < n; i++) {
+        for (int j = 0; j < i; j++) {
+            if (arr[j] < arr[i]) {
+                if (length[j] + 1 > length[i]) {
+                    length[i] = length[j] + 1;
+                    count[i] = count[j];
+                } else if (length[j] + 1 == length[i]) {
+                    count[i] = (count[i] + count[j]) % mod;
+                }
+            }
+        }
+        maxLen = max(maxLen, length[i]);
+    }
+    
+    long long result = 0;
+    for (int i = 0; i < n; i++) {
+        if (length[i] == maxLen) {
+            result = (result + count[i]) % mod;
+        }
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Números de Euler y Desarreglos}
+
+Ya vistos anteriormente, pero aquí hay más identidades.
+
+\textbf{Número de permutaciones con exactamente $k$ puntos fijos:}
+\[
+\binom{n}{k} D_{n-k}
+\]
+
+\textbf{Probabilidad de que una permutación aleatoria sea un desarreglo:}
+\[
+\lim_{n \to \infty} \frac{D_n}{n!} = \frac{1}{e} \approx 0.368
+\]
+
+\subsection{Problema de Josefo}
+
+$n$ personas en círculo, eliminando cada $k$-ésima persona. ¿Quién sobrevive?
+
+\textbf{Fórmula para $k=2$:}
+\[
+J(n) = 2L + 1
+\]
+donde $n = 2^m + L$ y $0 \leq L < 2^m$.
+
+\begin{lstlisting}
+// Problema de Josefo - solucion recursiva
+int josephus(int n, int k) {
+    if (n == 1) return 0;
+    return (josephus(n - 1, k) + k) % n;
+}
+
+// Problema de Josefo - solucion iterativa
+int josephus_iter(int n, int k) {
+    int result = 0;
+    for (int i = 2; i <= n; i++) {
+        result = (result + k) % i;
+    }
+    return result;
+}
+
+// Caso especial k=2
+int josephus_k2(int n) {
+    int powerOf2 = 1;
+    while (powerOf2 * 2 <= n) powerOf2 *= 2;
+    
+    int L = n - powerOf2;
+    return 2 * L + 1;
+}
+\end{lstlisting}
+
+\section{Fórmulas de Conteo Avanzadas}
+
+\subsection{Principio de Inclusión-Exclusión}
+
+\[
+\boxed{|A_1 \cup A_2 \cup \cdots \cup A_n| = \sum |A_i| - \sum |A_i \cap A_j| + \sum |A_i \cap A_j \cap A_k| - \cdots}
+\]
+
+\textbf{Aplicación:} Contar permutaciones sin elementos prohibidos.
+
+\begin{lstlisting}
+// Inclusion-Exclusion para contar elementos
+long long inclusionExclusion(int n, const vector<int>& setSizes) {
+    int m = setSizes.size();
+    long long result = 0;
+    
+    for (int mask = 1; mask < (1 << m); mask++) {
+        int count = __builtin_popcount(mask);
+        long long size = n;
+        
+        for (int i = 0; i < m; i++) {
+            if (mask & (1 << i)) {
+                size -= setSizes[i];
+            }
+        }
+        
+        if (size < 0) continue;
+        
+        if (count % 2 == 1) {
+            result += size;
+        } else {
+            result -= size;
+        }
+    }
+    
+    return result;
+}
+
+// Desarreglos usando inclusion-exclusion
+long long derangementsIE(int n, long long mod) {
+    vector<long long> fact(n + 1);
+    fact[0] = 1;
+    for (int i = 1; i <= n; i++) {
+        fact[i] = (fact[i-1] * i) % mod;
+    }
+    
+    long long result = 0;
+    for (int k = 0; k <= n; k++) {
+        long long term = fact[n] * binpow(fact[k], mod - 2, mod) % mod;
+        if (k % 2 == 0) {
+            result = (result + term) % mod;
+        } else {
+            result = (result - term + mod) % mod;
+        }
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\subsection{Función de Partición de Euler}
+
+Número de particiones de $n$ usando solo números impares = número usando solo números distintos.
+
+\textbf{Pentagonal de Euler:}
+\[
+\sum_{n=0}^{\infty} p(n)x^n = \prod_{k=1}^{\infty} \frac{1}{1-x^k}
+\]
+
+\subsection{Números de Euler (Zigzag)}
+
+$E_n$ cuenta permutaciones alternantes (zigzag) de longitud $n$.
+
+\textbf{Función generadora:}
+\[
+\sum_{n=0}^{\infty} E_n \frac{x^n}{n!} = \tan(x) + \sec(x)
+\]
+
+\begin{lstlisting}
+// Numeros de Euler (permutaciones alternantes)
+vector<long long> eulerNumbers(int n, long long mod) {
+    vector<vector<long long>> E(n + 1, vector<long long>(n + 1, 0));
+    E[0][0] = 1;
+    
+    for (int i = 1; i <= n; i++) {
+        for (int j = 0; j <= i; j++) {
+            if (j > 0) {
+                E[i][j] = (E[i][j] + (i - j) * E[i-1][j-1]) % mod;
+            }
+            if (j < i) {
+                E[i][j] = (E[i][j] + (j + 1) * E[i-1][j]) % mod;
+            }
+        }
+    }
+    
+    vector<long long> result(n + 1);
+    for (int i = 0; i <= n; i++) {
+        for (int j = 0; j <= i; j++) {
+            result[i] = (result[i] + E[i][j]) % mod;
+        }
+    }
+    
+    return result;
+}
+\end{lstlisting}
+
+\section{Optimizaciones y Técnicas Finales}
+
+\subsection{Divide y Vencerás para Recurrencias}
+
+\textbf{Master Theorem:}
+
+Para recurrencias de la forma $T(n) = aT(n/b) + f(n)$:
+
+\begin{itemize}
+    \item Si $f(n) = O(n^c)$ donde $c < \log_b a$, entonces $T(n) = \Theta(n^{\log_b a})$
+    \item Si $f(n) = \Theta(n^c \log^k n)$ donde $c = \log_b a$, entonces $T(n) = \Theta(n^c \log^{k+1} n)$
+    \item Si $f(n) = \Omega(n^c)$ donde $c > \log_b a$, entonces $T(n) = \Theta(f(n))$
+\end{itemize}
+
+\subsection{Optimización con Monotonía}
+
+Si una función es monótona, podemos usar búsqueda binaria.
+
+\begin{lstlisting}
+// Busqueda binaria en respuesta
+long long binarySearchAnswer(long long left, long long right,
+                             function<bool(long long)> check) {
+    while (left < right) {
+        long long mid = left + (right - left) / 2;
+        if (check(mid)) {
+            right = mid;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return left;
+}
+
+// Busqueda ternaria para funciones unimodales
+double ternarySearch(double left, double right,
+                    function<double(double)> f) {
+    const double EPS = 1e-9;
+    
+    while (right - left > EPS) {
+        double m1 = left + (right - left) / 3;
+        double m2 = right - (right - left) / 3;
+        
+        if (f(m1) < f(m2)) {
+            left = m1;
+        } else {
+            right = m2;
+        }
+    }
+    
+    return (left + right) / 2;
+}
+\end{lstlisting}
+
+\subsection{Trucos con Bits}
+
+\begin{lstlisting}
+// Verificar si n es potencia de 2
+bool isPowerOfTwo(int n) {
+    return n > 0 && (n & (n - 1)) == 0;
+}
+
+// Siguiente potencia de 2
+int nextPowerOfTwo(int n) {
+    n--;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    return n + 1;
+}
+
+// Contar bits en rango [0, n]
+long long countBitsInRange(long long n, int bit) {
+    long long cycle = 1LL << (bit + 1);
+    long long complete = (n + 1) / cycle;
+    long long remaining = (n + 1) % cycle;
+    
+    long long count = complete * (cycle / 2);
+    count += max(0LL, remaining - (cycle / 2));
+    
+    return count;
+}
+
+// Suma de XOR de pares
+long long sumXORPairs(const vector<int>& arr) {
+    long long sum = 0;
+    
+    for (int bit = 0; bit < 30; bit++) {
+        long long zeros = 0, ones = 0;
+        
+        for (int x : arr) {
+            if (x & (1 << bit)) ones++;
+            else zeros++;
+        }
+        
+        sum += zeros * ones * (1LL << bit);
+    }
+    
+    return sum;
+}
+\end{lstlisting}
+
+\section{Tabla de Referencia Rápida}
+
+\subsection{Sumatorias Comunes}
+
+\begin{center}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Sumatoria} & \textbf{Fórmula Cerrada} \\
+\hline
+$\sum_{i=1}^{n} i$ & $\frac{n(n+1)}{2}$ \\
+\hline
+$\sum_{i=1}^{n} i^2$ & $\frac{n(n+1)(2n+1)}{6}$ \\
+\hline
+$\sum_{i=1}^{n} i^3$ & $\left[\frac{n(n+1)}{2}\right]^2$ \\
+\hline
+$\sum_{i=1}^{n} (2i-1)$ & $n^2$ \\
+\hline
+$\sum_{i=1}^{n} i(i+1)$ & $\frac{n(n+1)(n+2)}{3}$ \\
+\hline
+$\sum_{i=1}^{n} \frac{1}{i(i+1)}$ & $\frac{n}{n+1}$ \\
+\hline
+$\sum_{i=0}^{n} 2^i$ & $2^{n+1} - 1$ \\
+\hline
+$\sum_{i=0}^{n} r^i$ & $\frac{r^{n+1}-1}{r-1}$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Complejidades Comunes}
+
+\begin{center}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Algoritmo} & \textbf{Complejidad} \\
+\hline
+Suma de Gauss & $O(1)$ \\
+\hline
+Fibonacci (matriz) & $O(\log n)$ \\
+\hline
+GCD (Euclides) & $O(\log \min(a,b))$ \\
+\hline
+Exponenciación binaria & $O(\log n)$ \\
+\hline
+Criba de Eratóstenes & $O(n \log \log n)$ \\
+\hline
+Factorización & $O(\sqrt{n})$ \\
+\hline
+Phi (Euler) & $O(\sqrt{n})$ \\
+\hline
+LIS (DP) & $O(n^2)$ \\
+\hline
+LIS (binaria) & $O(n \log n)$ \\
+\hline
+CRT & $O(k \log m)$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Constantes Útiles}
+
+\begin{center}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Constante} & \textbf{Valor Aproximado} \\
+\hline
+$e$ & $2.71828$ \\
+\hline
+$\pi$ & $3.14159$ \\
+\hline
+$\phi$ (proporción áurea) & $1.61803$ \\
+\hline
+$\gamma$ (Euler-Mascheroni) & $0.57721$ \\
+\hline
+$\ln(2)$ & $0.69314$ \\
+\hline
+$\ln(10)$ & $2.30258$ \\
+\hline
+$\sqrt{2}$ & $1.41421$ \\
+\hline
+$\sqrt{3}$ & $1.73205$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Conclusión y Recursos}
+
+Este cheatsheet cubre las fórmulas y técnicas aritméticas más importantes para programación competitiva. Recuerda:
+
+\begin{itemize}
+    \item Siempre verifica los casos límite y el manejo de módulos
+    \item Usa long long para evitar overflow
+    \item Precalcula factoriales y coeficientes binomiales cuando sea posible
+    \item Conoce las complejidades de los algoritmos
+    \item Practica implementando estas fórmulas desde cero
+\end{itemize}
+
+\textbf{Recursos adicionales:}
+\begin{itemize}
+    \item OEIS (Online Encyclopedia of Integer Sequences)
+    \item cp-algorithms.com
+    \item Codeforces EDU
+    \item USACO Guide
+    \item Competitive Programming 3 - Steven Halim
+\end{itemize}
+
+\vspace{2em}
+\begin{center}
+\rule{0.8\textwidth}{0.4pt}
+
+\textbf{¡Fin del Cheatsheet de Aritmética y Fórmulas!}
+
+\textit{Domina estas fórmulas y serás imparable en competencias}
+
+\rule{0.8\textwidth}{0.4pt}
+\end{center}
+
+\end{document}
