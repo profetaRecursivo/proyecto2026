@@ -22,6 +22,9 @@ vector<pto> ch(const vector<pto>& a, bool include_collinear = false) {
     sort(ans.begin(), ans.end(), [](pto a, pto b) {
         return make_pair(a.x, a.y) < make_pair(b.x, b.y);
     });
+    // ans.erase(unique(ans.begin(), ans.end(), [](const pto &A, const pto &B){
+    //     return A.x == B.x and A.y == B.y;
+    // }), ans.end());
     pto p1 = ans[0], p2 = ans.back();
     vector<pto> up, down;
     up.push_back(p1);
