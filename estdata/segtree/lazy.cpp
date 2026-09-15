@@ -30,6 +30,27 @@ void push(int b, int e, int node) {
         lazy[node] = 0;
     }
 }
+//si falla usar:
+void push(int node, int b, int e){
+    if(lazy[node] != 0){
+        if(lazy[node] == ORIGINAL){
+            tr[node] = suma_or[node];
+        } else {
+            tr[node] = 0;
+        }
+        if(b != e){
+            int l = 2 * node, r = l + 1;
+            lazy[l] = lazy[node];
+            if(lazy[l] == ORIGINAL) tr[l] = suma_or[l];
+            else tr[l] = 0;
+            lazy[r] = lazy[node];
+            if(lazy[r] == ORIGINAL) tr[r] = suma_or[r];
+            else tr[r] = 0;
+        }
+        
+        lazy[node] = 0;
+    }
+}
 
 void build(int b, int e, int node) {
     lazy[node] = 0;
