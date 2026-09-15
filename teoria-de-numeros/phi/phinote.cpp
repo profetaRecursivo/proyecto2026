@@ -1,2 +1,3 @@
 si n = p1^e1 * p2^e2 * ... pk^ek
 phi(n) = ans = n for p in primos distintos ans-=ans/p
+phi(n) = n*(p1-1)/p1 * (p2-1)/p2 ...
