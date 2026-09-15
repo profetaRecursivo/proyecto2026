@@ -30,6 +30,7 @@ void push(int b, int e, int node) {
         lazy[node] = 0;
     }
 }
+//EJECUTAR PUSH PARA HIJO IZQ Y DER ANTES DE TR[NODE] = MERGE
 //si falla usar:
 void push(int node, int b, int e){
     if(lazy[node] != 0){
