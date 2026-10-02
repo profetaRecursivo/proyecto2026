@@ -1,104 +1,137 @@
 #include <bits/stdc++.h>
 using namespace std;
+#define ll long long
 
-typedef long long ll;
+// ====================================================================
+// 1. ESPECÍFICO DEL PROBLEMA (Solo cambias esto según el problema)
+// ====================================================================
 
-const int MAXNODES = 4000000; // q * log(maxVal)
+struct Tag {
+    ll add = 0;
 
-struct Node {
-    ll val;
-    Node() : val(0) {}
-    Node(ll v) : val(v) {}
+    bool empty() const {
+        return add == 0;
+    }
+
+    // Cómo se compone un nuevo tag con el tag acumulado previo
+    void combine(const Tag& t) {
+        add += t.add;
+    }
 };
 
-Node op(Node a, Node b) {
-    return Node(a.val + b.val);
-}
+struct Info {
+    ll sum = 0;
 
-Node merge(Node a, Node b) {
-    return op(a, b);
-}
-
-Node tr[MAXNODES];
-ll lazy_[MAXNODES];
-bool hasLazy[MAXNODES];
-int lc[MAXNODES], rc[MAXNODES];
-int cnt = 1;
-
-int newNode() {
-    cnt++;
-    lc[cnt] = 0;
-    rc[cnt] = 0;
-    tr[cnt] = Node();
-    hasLazy[cnt] = false;
-    return cnt;
-}
-
-void ensureChildren(int node) {
-    if (!lc[node]) lc[node] = newNode();
-    if (!rc[node]) rc[node] = newNode();
-}
-
-void push_ass(int node, ll b, ll e) {
-    if (!hasLazy[node]) return;
-
-    if (b == e) {
-        hasLazy[node] = false;
-        return;
+    // Cómo un tag modifica a esta información en un rango de longitud 'len'
+    void apply(const Tag& t, ll len) {
+        sum += t.add * len;
     }
 
-    ensureChildren(node);
-    for (int hijo : {lc[node], rc[node]}) {
-        tr[hijo] = Node(lazy_[node]);
-        lazy_[hijo] = lazy_[node];
-        hasLazy[hijo] = true;
+    // Cómo se unen los valores de dos hijos
+    static Info merge(const Info& a, const Info& b) {
+        return Info{a.sum + b.sum};
+    }
+};
+
+// ====================================================================
+// 2. MOTOR GENÉRICO PERSISTENTE (Nunca se toca entre problemas)
+// ====================================================================
+
+struct Node {
+    Info info;
+    Tag tag;
+    Node *izq, *der;
+
+    Node(Info i = Info(), Tag t = Tag(), Node* l = nullptr, Node* r = nullptr)
+        : info(i), tag(t), izq(l), der(r) {}
+};
+
+Node* nulo = new Node();
+
+void push(Node* node, ll b, ll e) {
+    if (node == nullptr || node == nulo || node->tag.empty()) return;
+
+    if (b != e) {
+        ll mid = b + (e - b) / 2;
+
+        // Hijo izquierdo
+        Node* izq = (node->izq == nullptr || node->izq == nulo)
+                    ? new Node(Info(), Tag(), nulo, nulo)
+                    : new Node(*node->izq);
+        izq->tag.combine(node->tag);
+        izq->info.apply(node->tag, mid - b + 1);
+        node->izq = izq;
+
+        // Hijo derecho
+        Node* der = (node->der == nullptr || node->der == nulo)
+                    ? new Node(Info(), Tag(), nulo, nulo)
+                    : new Node(*node->der);
+        der->tag.combine(node->tag);
+        der->info.apply(node->tag, e - mid);
+        node->der = der;
     }
 
-    hasLazy[node] = false;
+    node->tag = Tag(); // Resetea el tag
 }
 
-void update(int node, ll b, ll e, ll i, ll j, ll val) {
+Node* update(Node* node, ll b, ll e, ll i, ll j, const Tag& val) {
+    if (node == nullptr || node == nulo) node = nulo;
+    Node* ans = (node == nulo) ? new Node(Info(), Tag(), nulo, nulo) : new Node(*node);
+
     if (i <= b && e <= j) {
-        tr[node] = Node(val);
-        lazy_[node] = val;
-        hasLazy[node] = true;
-        return;
+        ans->info.apply(val, e - b + 1);
+        ans->tag.combine(val);
+        return ans;
     }
 
-    push_ass(node, b, e); // ya crea los hijos internamente si hace falta
-
+    push(ans, b, e);
     ll mid = b + (e - b) / 2;
-    if (j <= mid) update(lc[node], b, mid, i, j, val);
-    else if (i > mid) update(rc[node], mid+1, e, i, j, val);
-    else {
-        update(lc[node], b, mid, i, j, val);
-        update(rc[node], mid+1, e, i, j, val);
+
+    if (j <= mid) {
+        ans->izq = update(ans->izq, b, mid, i, j, val);
+    } else if (i > mid) {
+        ans->der = update(ans->der, mid + 1, e, i, j, val);
+    } else {
+        ans->izq = update(ans->izq, b, mid, i, j, val);
+        ans->der = update(ans->der, mid + 1, e, i, j, val);
     }
 
-    tr[node] = merge(tr[lc[node]], tr[rc[node]]);
+    Info info_izq = (ans->izq && ans->izq != nulo) ? ans->izq->info : Info();
+    Info info_der = (ans->der && ans->der != nulo) ? ans->der->info : Info();
+    ans->info = Info::merge(info_izq, info_der);
+
+    return ans;
 }
 
-Node query(int node, ll b, ll e, ll i, ll j) {
-    if (i <= b && e <= j) return tr[node];
+Info query(Node* node, ll b, ll e, ll i, ll j, Tag tag_acum = Tag()) {
+    if (node == nullptr || node == nulo) {
+        ll l = max(b, i);
+        ll r = min(e, j);
+        if (l > r) return Info();
+        Info res = Info();
+        res.apply(tag_acum, r - l + 1);
+        return res;
+    }
 
-    push_ass(node, b, e);
+    if (i <= b && e <= j) {
+        Info res = node->info;
+        res.apply(tag_acum, e - b + 1);
+        return res;
+    }
 
     ll mid = b + (e - b) / 2;
-    if (j <= mid) return query(lc[node], b, mid, i, j);
-    if (i > mid) return query(rc[node], mid+1, e, i, j);
-    return merge(query(lc[node], b, mid, i, j), query(rc[node], mid+1, e, i, j));
-}
+    Tag cur_tag = tag_acum;
+    cur_tag.combine(node->tag);
 
-int main() {
-    ll LO = 0, HI = 1000000000000000000LL;
-    int root = 1;
-    tr[root] = Node();
-    hasLazy[root] = false;
-    lc[root] = rc[root] = 0;
+    if (j <= mid) {
+        return query(node->izq, b, mid, i, j, cur_tag);
+    }
+    if (i > mid) {
+        return query(node->der, mid + 1, e, i, j, cur_tag);
+    }
 
-    // ejemplo:
-    // update(root, LO, HI, i, j, val);
-    // query(root, LO, HI, i, j).val;
-
-    return 0;
+    return Info::merge(
+        query(node->izq, b, mid, i, j, cur_tag),
+        query(node->der, mid + 1, e, i, j, cur_tag)
+    );
 }
