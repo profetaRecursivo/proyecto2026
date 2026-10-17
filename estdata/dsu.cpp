@@ -1,8 +1,9 @@
 struct unionFind {
     vi p;
     vi size;
+    int components;
 	//inicializar extra
-    unionFind(int n) : p(n, -1), size(n, 1) {}
+    unionFind(int n) : p(n, -1), size(n, 1), components(n) {}
     int findParent(int v) {
         if (p[v] == -1) return v;
         return p[v] = findParent(p[v]);
@@ -15,6 +16,7 @@ struct unionFind {
             swap(a, b);
         p[b] = a;
         size[a] += size[b];
+        components--;
 		//extra[a] = f(extra[b]); -> extra[findparent(x)];
         return true;
     }
