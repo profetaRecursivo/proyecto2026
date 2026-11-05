@@ -1,7 +1,7 @@
 /*dado arreglo de n elementos responde queries del tipo 
 que subset tiene como xor = x?
 n=sz, b = 61 la base complejidad:
-n^2*b/64 + q*(n^2*b/64)*/
+O(n^2 *B/64 + q*n(1+B/64))*/
 const int tam = 61;
 const int sz = 500;
 void solve() {
@@ -30,7 +30,7 @@ void solve() {
 			if (x & (1LL << i)) {
 				if (basis[i].first) x ^= basis[i].first, bs ^= basis[i].second;
 			}
-		}
+		}//esto solo sirve si esta garantizado que basis[i].first == 0
 		for (int i = 0; i < n; i++) cout << bs[i];
 	}
 }

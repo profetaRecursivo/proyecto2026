@@ -5,4 +5,4 @@ for(int i = 0;i < N; ++i) for(int mask = 0; mask < (1<<N); ++mask){
         F[mask] += F[mask^(1<<i)];
 }
 F[X] = |Y| tal que X | Y = X
-F[~X] = |Y| tal que X & Y = 0
+F[~X] = |Y| tal que X & Y = 0//negacion sin ~, usando (1<<n)-1
